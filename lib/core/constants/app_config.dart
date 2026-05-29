@@ -1,13 +1,15 @@
+import 'api_keys.dart';
+
 class AppConfig {
-  // Supabase
-  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-  static const String supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  // Supabase - loaded from api_keys.dart (base64 encoded for security)
+  static final String supabaseUrl = ApiKeys.supabaseUrl;
+  static final String supabaseAnonKey = ApiKeys.supabaseAnonKey;
   
-  // Gemini API (for food vision recognition)
-  static const String geminiApiKey = String.fromEnvironment('GEMINI_API_KEY');
+  // Gemini API - loaded from api_keys.dart
+  static final String geminiApiKey = ApiKeys.geminiApiKey;
   
-  // Groq API (for AI nutrition assistant)
-  static const String groqApiKey = String.fromEnvironment('GROQ_API_KEY');
+  // Groq API - loaded from api_keys.dart
+  static final String groqApiKey = ApiKeys.groqApiKey;
   
   // App Info
   static const String appName = 'FoodIQ';
