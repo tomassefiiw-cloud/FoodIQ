@@ -20,6 +20,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String _dinnerTime = AppConfig.defaultDinnerTime;
   bool _loaded = false;
   bool _isTestingNotif = false;
+  bool _isRepairing = false;
   String _diagnosticInfo = '';
 
   static const _kReminders = 'meal_reminders_enabled';
@@ -129,28 +130,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
     });
     await _savePrefs();
-    await NotificationService.scheduleMealReminders(
-      enabled: true,
-      breakfastTime: _breakfastTime,
-      lunchTime: _lunchTime,
-      dinnerTime: _dinnerTime,
-    );
 
-    if (mounted) {
-      // Schedule a quick test to verify the new time works
-      await NotificationService.scheduleQuickTestNotification(delaySeconds: 15);
-      await _loadDiagnosticInfo();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '⏰ $meal reminder updated to $newTime. Test notification in 15s!',
-            style: TextStyle(fontFamily: 'Poppins'),
-          ),
-          backgroundColor: AppColors.primary,
-          duration: const Duration(seconds: 3),
-        ),
+    // Re-schedule all reminders with the updated time
+    if (_mealReminders) {
+      await NotificationService.scheduleMealReminders(
+        enabled: true,
+        breakfastTime: _breakfastTime,
+        lunchTime: _lunchTime,
+        dinnerTime: _dinnerTime,
       );
+
+      if (mounted) {
+        // Schedule a quick test to verify the new time works
+        await NotificationService.scheduleQuickTestNotification(delaySeconds: 15);
+        await _loadDiagnosticInfo();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '⏰ $meal reminder updated to $newTime. Test notification in 15s!',
+              style: TextStyle(fontFamily: 'Poppins'),
+            ),
+            backgroundColor: AppColors.primary,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -183,6 +188,57 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           duration: const Duration(seconds: 5),
         ),
       );
+    }
+  }
+
+  /// Full repair: re-requests all permissions, recreates the notification
+  /// channel, and re-schedules all reminders. Use when notifications
+  /// aren't working despite being enabled.
+  Future<void> _repairNotifications() async {
+    setState(() => _isRepairing = true);
+
+    try {
+      // 1. Re-request ALL permissions
+      await NotificationService.requestPermission();
+
+      // 2. Re-schedule from scratch
+      await NotificationService.rescheduleFromPrefs();
+
+      // 3. Show test notifications
+      await NotificationService.showTestNotification();
+      await NotificationService.scheduleQuickTestNotification(delaySeconds: 10);
+
+      // 4. Update diagnostics
+      await _loadDiagnosticInfo();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '🔧 Notifications repaired! A test will appear in 10 seconds. '
+              'If you still don\'t see it, please check:\n'
+              '1. Phone Settings → Apps → FoodIQ → Notifications\n'
+              '2. Phone Settings → Apps → FoodIQ → Battery → Unrestricted',
+              style: TextStyle(fontFamily: 'Poppins'),
+            ),
+            backgroundColor: AppColors.success,
+            duration: const Duration(seconds: 6),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Repair failed: $e',
+                style: TextStyle(fontFamily: 'Poppins')),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isRepairing = false);
     }
   }
 
@@ -312,6 +368,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     _TimeSetting(label: '🍽️ Lunch', time: _lunchTime, onChanged: (t) => _updateTime('lunch', t)),
                     _TimeSetting(label: '🌙 Dinner', time: _dinnerTime, onChanged: (t) => _updateTime('dinner', t)),
                     const Divider(),
+
                     // Test Notification Button
                     SizedBox(
                       width: double.infinity,
@@ -333,6 +390,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
+
+                    // Repair Notifications Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _isRepairing ? null : _repairNotifications,
+                        icon: _isRepairing
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Icon(Icons.build),
+                        label: Text(
+                          _isRepairing ? 'Repairing...' : '🔧 Repair Notifications',
+                          style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.warning,
+                          side: const BorderSide(color: AppColors.warning),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
                     // Notification Diagnostic Info
                     if (_diagnosticInfo.isNotEmpty) ...[
                       const SizedBox(height: 8),
@@ -378,7 +458,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       '1. Go to Phone Settings → Apps → FoodIQ → Notifications → Enable all\n'
                       '2. Also check "Alarms & reminders" permission\n'
                       '3. Disable battery optimization for FoodIQ\n'
-                      '4. On Samsung/Xiaomi/Huawei: lock the app in recent tasks',
+                      '4. On Samsung/Xiaomi/Huawei: lock the app in recent tasks\n'
+                      '5. Use "Repair Notifications" above to fix common issues',
                       style: TextStyle(fontFamily: 'Poppins', fontSize: 11, color: Colors.grey),
                     ),
                   ],

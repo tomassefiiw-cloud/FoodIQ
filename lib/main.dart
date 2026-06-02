@@ -49,3 +49,18 @@ void main() async {
 
   runApp(const ProviderScope(child: FoodIQApp()));
 }
+
+/// Observer that re-schedules notifications when the app resumes from
+/// the background. This is critical because many OEM ROMs (Samsung,
+/// Xiaomi, Huawei) aggressively kill AlarmManager entries when the app
+/// is in the background, causing scheduled notifications to be silently
+/// dropped. Re-scheduling on resume ensures they're always armed.
+class AppLifecycleNotifier extends WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      print('[Lifecycle] App resumed — re-scheduling notifications');
+      NotificationService.rescheduleFromPrefs();
+    }
+  }
+}

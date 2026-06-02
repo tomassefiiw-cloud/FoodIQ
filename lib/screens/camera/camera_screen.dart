@@ -64,22 +64,31 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
       }
     });
 
-    // Automatically show meal type selection dialog after successful analysis
+    // Automatically show meal type selection dialog after successful analysis.
+    // This is REQUIRED — the user must select breakfast/lunch/dinner/snack
+    // before the food can be logged.
     if (detailed.result != null && mounted) {
-      // Small delay so the user can see the result first
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (mounted && _result != null) {
-        _showMealTypeDialog(_result!);
-      }
+      // Use a post-frame callback to ensure the UI has fully rebuilt
+      // before showing the dialog. This prevents the dialog from being
+      // dismissed by the setState above.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _result != null) {
+          _showMealTypeDialog(_result!);
+        }
+      });
     }
   }
 
   /// Show meal type selection dialog before logging the food.
+  /// The dialog is NOT dismissible by tapping outside — the user MUST
+  /// choose a meal type or explicitly press "Cancel" (which skips logging).
   Future<void> _showMealTypeDialog(AIFoodResult result) async {
     final MealType? selected = await showModalBottomSheet<MealType>(
       context: context,
       backgroundColor: Colors.transparent,
-      isDismissible: true,
+      isDismissible: false, // User must explicitly choose
+      enableDrag: false,    // Cannot swipe away — must pick or cancel
+      isScrollControlled: true,
       builder: (ctx) {
         final isDark = Theme.of(ctx).brightness == Brightness.dark;
         return Container(
@@ -101,10 +110,21 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
+              // Icon header
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Icon(Icons.restaurant_menu, color: AppColors.primary, size: 32),
+              ),
+              const SizedBox(height: 16),
               Text(
                 'Which meal is this?',
                 style: TextStyle(fontFamily: 'Poppins', 
-                  fontSize: 20,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -112,8 +132,9 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
               Text(
                 '${result.foodName} • ${result.calories.toStringAsFixed(0)} kcal',
                 style: TextStyle(fontFamily: 'Poppins', 
-                  fontSize: 14,
+                  fontSize: 15,
                   color: Colors.grey,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 20),
@@ -154,7 +175,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(null),
                 child: Text(
-                  'Cancel',
+                  'Skip logging',
                   style: TextStyle(fontFamily: 'Poppins', 
                     color: Colors.grey,
                     fontWeight: FontWeight.w500,
@@ -318,7 +339,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                 child: Row(
                   children: [
                     const Icon(Icons.error_outline, color: AppColors.error),
-                    const SizedBox(width: 12),
+                    const SizedBox(height: 12),
                     Expanded(child: Text(_error!, style: TextStyle(fontFamily: 'Poppins', color: AppColors.error))),
                   ],
                 ),

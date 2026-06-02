@@ -2,16 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme/app_theme.dart';
+import 'main.dart'; // for AppLifecycleNotifier
 import 'screens/auth/login_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'providers/auth_provider.dart';
 
-class FoodIQApp extends ConsumerWidget {
+class FoodIQApp extends ConsumerStatefulWidget {
   const FoodIQApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FoodIQApp> createState() => _FoodIQAppState();
+}
+
+class _FoodIQAppState extends ConsumerState<FoodIQApp> with WidgetsBindingObserver {
+  late final AppLifecycleNotifier _lifecycleNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    // Register lifecycle observer to re-schedule notifications on resume
+    _lifecycleNotifier = AppLifecycleNotifier();
+    WidgetsBinding.instance.addObserver(_lifecycleNotifier);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(_lifecycleNotifier);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final darkMode = ref.watch(darkModeProvider);
 

@@ -3,21 +3,27 @@ import 'dart:io';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../core/constants/app_strings.dart';
 
 /// FoodIQ Notification Service — real OS push notifications.
+///
+/// v5 — hardened for reliability on OEM ROMs (Samsung, Xiaomi, Huawei, etc.):
+///  - Always recreates the notification channel before scheduling
+///  - Cancels → brief pause → reschedule to avoid AlarmManager race conditions
+///  - Re-schedules on app resume via [rescheduleFromPrefs]
+///  - Uses both exact and inexact fallbacks with full logging
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
-  // Channel ID bumped to _v4 — we need a fresh channel to guarantee
-  // MAX importance on every install (Android channel config is immutable
-  // after creation; old channels might retain lower importance on some
-  // OEMs even after deletion).
-  static const String _channelId = 'foodiq_meal_reminder_v4';
+  // Channel ID bumped to _v5 — fresh channel guarantees MAX importance
+  // on every install/update (Android channel config is immutable after
+  // creation; old channels might retain lower importance on some OEMs).
+  static const String _channelId = 'foodiq_meal_reminder_v5';
   static const String _channelName = 'Meal Reminders';
   static const String _channelDescription =
       'Reminders for breakfast, lunch, and dinner.';
@@ -54,19 +60,38 @@ class NotificationService {
 
     // 3. On Android: delete old channels & create fresh high-importance one
     if (Platform.isAndroid) {
-      final impl = _plugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
-      // Delete ALL old channels that might have wrong importance
-      for (final old in [
-        'foodiq_meal_reminder',
-        'foodiq_meal_reminder_v2',
-        'foodiq_meal_reminder_v3',
-      ]) {
-        try {
-          await impl?.deleteNotificationChannel(old);
-        } catch (_) {}
-      }
-      // Create the v4 channel with MAX importance
+      await _ensureChannelExists();
+    }
+
+    _initialized = true;
+    print('[Notif] ✅ Initialized — tz=$_tzName');
+  }
+
+  /// Ensure the v5 notification channel exists with MAX importance.
+  /// Called both on init AND before every scheduleMealReminders call
+  /// to guard against OEMs that silently delete channels.
+  static Future<void> _ensureChannelExists() async {
+    if (!Platform.isAndroid) return;
+
+    final impl = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+
+    // Delete ALL old channels that might have wrong importance
+    for (final old in [
+      'foodiq_meal_reminder',
+      'foodiq_meal_reminder_v2',
+      'foodiq_meal_reminder_v3',
+      'foodiq_meal_reminder_v4',
+    ]) {
+      try {
+        await impl?.deleteNotificationChannel(old);
+      } catch (_) {}
+    }
+
+    // Always (re)create the v5 channel with MAX importance.
+    // createNotificationChannel is idempotent if the channel already
+    // exists with the same config, so calling it every time is safe.
+    try {
       await impl?.createNotificationChannel(
         const AndroidNotificationChannel(
           _channelId,
@@ -79,10 +104,9 @@ class NotificationService {
           showBadge: true,
         ),
       );
+    } catch (e) {
+      print('[Notif] ⚠️ createNotificationChannel failed: $e');
     }
-
-    _initialized = true;
-    print('[Notif] ✅ Initialized — tz=$_tzName');
   }
 
   /// Strict OS timezone detection with multiple fallbacks.
@@ -91,7 +115,6 @@ class NotificationService {
     try {
       final name = await FlutterTimezone.getLocalTimezone();
       if (name.isNotEmpty) {
-        // Try to resolve the name to a valid location
         final location = _safeGetLocation(name);
         if (location != null) {
           tz.setLocalLocation(location);
@@ -162,15 +185,13 @@ class NotificationService {
   }
 
   /// Guess African timezone names from the current UTC offset.
-  /// Africa/Nairobi is UTC+3, which is the most common in East Africa.
   static List<String> _guessAfricanTimezone(int offsetMinutes) {
-    // Map of offset minutes to likely African timezone names
     final map = <int, List<String>>{
-      -60: ['Africa/Lagos', 'Africa/Algiers', 'Africa/Tunis'],   // UTC+1
-      -120: ['Africa/Cairo', 'Africa/Johannesburg', 'Africa/Maputo'], // UTC+2
-      -180: ['Africa/Nairobi', 'Africa/Addis_Ababa', 'Africa/Kampala', 'Africa/Dar_es_Salaam'], // UTC+3
-      -240: ['Africa/Mogadishu'], // UTC+4
-      0: ['Africa/Casablanca', 'Africa/Accra', 'Africa/Monrovia'], // UTC+0
+      -60: ['Africa/Lagos', 'Africa/Algiers', 'Africa/Tunis'],
+      -120: ['Africa/Cairo', 'Africa/Johannesburg', 'Africa/Maputo'],
+      -180: ['Africa/Nairobi', 'Africa/Addis_Ababa', 'Africa/Kampala', 'Africa/Dar_es_Salaam'],
+      -240: ['Africa/Mogadishu'],
+      0: ['Africa/Casablanca', 'Africa/Accra', 'Africa/Monrovia'],
     };
     return map[offsetMinutes] ?? [];
   }
@@ -273,6 +294,13 @@ class NotificationService {
   }
 
   /// Schedule (or reschedule) the three daily meal reminders.
+  ///
+  /// This method:
+  /// 1. Ensures the notification channel exists with MAX importance
+  /// 2. Cancels all existing meal notifications
+  /// 3. Waits a brief moment to let AlarmManager fully process cancellations
+  /// 4. Schedules fresh notifications with the given times
+  /// 5. Shows a confirmation notification so the user knows it worked
   static Future<void> scheduleMealReminders({
     required bool enabled,
     String breakfastTime = '08:00',
@@ -280,6 +308,9 @@ class NotificationService {
     String dinnerTime = '19:00',
   }) async {
     if (!_initialized) await initialize();
+
+    // Always ensure channel exists before scheduling
+    await _ensureChannelExists();
 
     // Always cancel existing first
     await _plugin.cancel(idBreakfast);
@@ -290,6 +321,12 @@ class NotificationService {
       print('[Notif] 🔕 Reminders DISABLED — all cancelled');
       return;
     }
+
+    // Brief pause to let AlarmManager fully process cancellations.
+    // Without this, some OEM ROMs (Samsung, Xiaomi) may silently
+    // drop the new schedule because the old one hasn't been fully
+    // removed yet.
+    await Future.delayed(const Duration(milliseconds: 300));
 
     final b = _parseTime(breakfastTime, fallback: const _T(8, 0));
     final l = _parseTime(lunchTime, fallback: const _T(12, 30));
@@ -334,6 +371,41 @@ class NotificationService {
     } catch (_) {}
   }
 
+  /// Convenience: re-schedule from SharedPreferences.
+  /// Safe to call from anywhere — app start, lifecycle observer, etc.
+  static Future<void> rescheduleFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final enabled = prefs.getBool('meal_reminders_enabled') ?? false;
+      if (!enabled) {
+        print('[Notif] rescheduleFromPrefs: reminders disabled, skipping');
+        return;
+      }
+
+      if (!_initialized) await initialize();
+
+      // Re-request permissions in case they were revoked
+      await requestPermission();
+
+      final breakfastTime =
+          prefs.getString('reminder_breakfast_time') ?? '08:00';
+      final lunchTime =
+          prefs.getString('reminder_lunch_time') ?? '12:30';
+      final dinnerTime =
+          prefs.getString('reminder_dinner_time') ?? '19:00';
+
+      await scheduleMealReminders(
+        enabled: true,
+        breakfastTime: breakfastTime,
+        lunchTime: lunchTime,
+        dinnerTime: dinnerTime,
+      );
+      print('[Notif] ✅ rescheduleFromPrefs done');
+    } catch (e) {
+      print('[Notif] ⚠️ rescheduleFromPrefs failed: $e');
+    }
+  }
+
   /// Show a confirmation notification: "Reminders set for 08:00 / 12:30 / 19:00"
   static Future<void> _showReminderConfirmation(
     String breakfastTime,
@@ -351,6 +423,8 @@ class NotificationService {
         playSound: true,
         visibility: NotificationVisibility.public,
         category: AndroidNotificationCategory.reminder,
+        autoCancel: true,
+        showWhen: true,
         styleInformation: BigTextStyleInformation(
           'Breakfast: $breakfastTime\n'
           'Lunch: $lunchTime\n'
@@ -397,6 +471,9 @@ class NotificationService {
         category: AndroidNotificationCategory.reminder,
         styleInformation: BigTextStyleInformation(body),
         ticker: 'FoodIQ',
+        autoCancel: false,
+        showWhen: true,
+        onlyAlertOnce: false,
       ),
       iOS: const DarwinNotificationDetails(
         presentAlert: true,
@@ -441,6 +518,22 @@ class NotificationService {
         print('[Notif] ✅ id=$id scheduled with INEXACT alarm (fallback)');
       } catch (e2) {
         print('[Notif] ❌ INEXACT also failed for id=$id: $e2');
+        // Last resort: try without matchDateTimeComponents (one-shot)
+        try {
+          await _plugin.zonedSchedule(
+            id,
+            title,
+            body,
+            scheduledDate,
+            details,
+            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
+          );
+          print('[Notif] ✅ id=$id scheduled as ONE-SHOT (last resort)');
+        } catch (e3) {
+          print('[Notif] ❌ ALL scheduling methods failed for id=$id: $e3');
+        }
       }
     }
   }
@@ -448,6 +541,8 @@ class NotificationService {
   /// Immediate test notification — proves the channel + perms work.
   static Future<void> showTestNotification() async {
     if (!_initialized) await initialize();
+    await _ensureChannelExists();
+
     final details = NotificationDetails(
       android: AndroidNotificationDetails(
         _channelId,
@@ -459,6 +554,8 @@ class NotificationService {
         playSound: true,
         visibility: NotificationVisibility.public,
         category: AndroidNotificationCategory.reminder,
+        autoCancel: true,
+        showWhen: true,
         styleInformation: BigTextStyleInformation(
             'Reminders are armed. We\'ll nudge you at breakfast, '
             'lunch, and dinner — right on your status bar.\n'
@@ -482,12 +579,11 @@ class NotificationService {
   }
 
   /// Schedule a quick test notification that fires after [delaySeconds].
-  /// This lets the user verify scheduled notifications work without waiting
-  /// until the actual meal time.
   static Future<void> scheduleQuickTestNotification({
     int delaySeconds = 15,
   }) async {
     if (!_initialized) await initialize();
+    await _ensureChannelExists();
 
     // Cancel any previous quick test
     await _plugin.cancel(idQuickTest);
@@ -507,6 +603,8 @@ class NotificationService {
         playSound: true,
         visibility: NotificationVisibility.public,
         category: AndroidNotificationCategory.reminder,
+        autoCancel: true,
+        showWhen: true,
         ticker: 'FoodIQ Test',
       ),
       iOS: const DarwinNotificationDetails(
@@ -580,6 +678,7 @@ class NotificationService {
         'Notifications: ${notifEnabled ? "✅ Enabled" : "❌ Disabled"}\n'
         'Exact Alarms: ${exactAlarms ? "✅ Allowed" : "⚠️ Not allowed"}\n'
         'Battery Optimization: ${batteryOptimized == true ? "✅ Exempt" : batteryOptimized == false ? "⚠️ Not exempt" : "❓ Unknown"}\n'
+        'Channel: $_channelId\n'
         'Pending: ${pendingNotifs.length} notification(s)\n'
         'Current time: ${tz.TZDateTime.now(tz.local).toString().substring(0, 19)}';
   }
