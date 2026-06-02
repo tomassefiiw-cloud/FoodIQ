@@ -20,6 +20,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String _lunchTime = AppConfig.defaultLunchTime;
   String _dinnerTime = AppConfig.defaultDinnerTime;
   bool _loaded = false;
+  bool _isTestingNotif = false;
 
   static const _kReminders = 'meal_reminders_enabled';
   static const _kBreakfast = 'reminder_breakfast_time';
@@ -50,6 +51,125 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await prefs.setString(_kBreakfast, _breakfastTime);
     await prefs.setString(_kLunch, _lunchTime);
     await prefs.setString(_kDinner, _dinnerTime);
+  }
+
+  Future<void> _toggleReminders(bool enabled) async {
+    if (enabled) {
+      // Request permissions first
+      final granted = await NotificationService.requestPermission();
+      if (!granted && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('⚠️ Notification permission was not granted. '
+                'Please enable it in your phone settings.',
+                style: GoogleFonts.poppins()),
+            backgroundColor: AppColors.warning,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+        // Still allow enabling — they can grant later
+      }
+    }
+
+    setState(() => _mealReminders = enabled);
+    await NotificationService.scheduleMealReminders(
+      enabled: enabled,
+      breakfastTime: _breakfastTime,
+      lunchTime: _lunchTime,
+      dinnerTime: _dinnerTime,
+    );
+    await _savePrefs();
+
+    if (enabled && mounted) {
+      // Show immediate test notification
+      await NotificationService.showTestNotification();
+      // Also schedule a quick 15-sec test to verify scheduled ones work
+      await NotificationService.scheduleQuickTestNotification(delaySeconds: 15);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '🔔 Reminders ON! A test notification will appear in 15 seconds. '
+              'You should see two notifications now.',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: AppColors.success,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _updateTime(String meal, String newTime) async {
+    setState(() {
+      switch (meal) {
+        case 'breakfast':
+          _breakfastTime = newTime;
+          break;
+        case 'lunch':
+          _lunchTime = newTime;
+          break;
+        case 'dinner':
+          _dinnerTime = newTime;
+          break;
+      }
+    });
+    await _savePrefs();
+    await NotificationService.scheduleMealReminders(
+      enabled: true,
+      breakfastTime: _breakfastTime,
+      lunchTime: _lunchTime,
+      dinnerTime: _dinnerTime,
+    );
+
+    if (mounted) {
+      // Schedule a quick test to verify the new time works
+      await NotificationService.scheduleQuickTestNotification(delaySeconds: 15);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '⏰ $meal reminder updated to $newTime. Test notification in 15s!',
+            style: GoogleFonts.poppins(),
+          ),
+          backgroundColor: AppColors.primary,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  Future<void> _sendTestNotification() async {
+    setState(() => _isTestingNotif = true);
+
+    // First verify permissions
+    final enabled = await NotificationService.areNotificationsEnabled();
+    if (!enabled) {
+      await NotificationService.requestPermission();
+    }
+
+    // Show immediate notification
+    await NotificationService.showTestNotification();
+    // Schedule one for 15 seconds later
+    await NotificationService.scheduleQuickTestNotification(delaySeconds: 15);
+
+    setState(() => _isTestingNotif = false);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '🔔 Test sent! You should see 1 notification now and another in 15s. '
+            'If you don\'t see them, check your phone\'s notification settings for FoodIQ.',
+            style: GoogleFonts.poppins(),
+          ),
+          backgroundColor: AppColors.primary,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
   }
 
   @override
@@ -170,36 +290,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     subtitle: Text('Get notified at meal times', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
                     value: _mealReminders,
                     activeColor: AppColors.primary,
-                    onChanged: (v) async {
-                      if (v) await NotificationService.requestPermission();
-                      setState(() => _mealReminders = v);
-                      await NotificationService.scheduleMealReminders(
-                        enabled: v,
-                        breakfastTime: _breakfastTime,
-                        lunchTime: _lunchTime,
-                        dinnerTime: _dinnerTime,
-                      );
-                      await _savePrefs();
-                      if (v) NotificationService.showTestNotification();
-                    },
+                    onChanged: _toggleReminders,
                   ),
                   if (_mealReminders) ...[
                     const Divider(),
-                    _TimeSetting(label: '🌅 Breakfast', time: _breakfastTime, onChanged: (t) {
-                      setState(() => _breakfastTime = t);
-                      _savePrefs();
-                      NotificationService.scheduleMealReminders(enabled: true, breakfastTime: t, lunchTime: _lunchTime, dinnerTime: _dinnerTime);
-                    }),
-                    _TimeSetting(label: '🍽️ Lunch', time: _lunchTime, onChanged: (t) {
-                      setState(() => _lunchTime = t);
-                      _savePrefs();
-                      NotificationService.scheduleMealReminders(enabled: true, breakfastTime: _breakfastTime, lunchTime: t, dinnerTime: _dinnerTime);
-                    }),
-                    _TimeSetting(label: '🌙 Dinner', time: _dinnerTime, onChanged: (t) {
-                      setState(() => _dinnerTime = t);
-                      _savePrefs();
-                      NotificationService.scheduleMealReminders(enabled: true, breakfastTime: _breakfastTime, lunchTime: _lunchTime, dinnerTime: t);
-                    }),
+                    _TimeSetting(label: '🌅 Breakfast', time: _breakfastTime, onChanged: (t) => _updateTime('breakfast', t)),
+                    _TimeSetting(label: '🍽️ Lunch', time: _lunchTime, onChanged: (t) => _updateTime('lunch', t)),
+                    _TimeSetting(label: '🌙 Dinner', time: _dinnerTime, onChanged: (t) => _updateTime('dinner', t)),
+                    const Divider(),
+                    // Test Notification Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _isTestingNotif ? null : _sendTestNotification,
+                        icon: _isTestingNotif
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Icon(Icons.notifications_active),
+                        label: Text(
+                          _isTestingNotif ? 'Sending...' : 'Send Test Notification',
+                          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(color: AppColors.primary),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '💡 Tip: If you don\'t see notifications, go to your phone\'s '
+                      'Settings → Apps → FoodIQ → Notifications and make sure '
+                      'they\'re allowed. Also check "Alarms & reminders" permission.',
+                      style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey),
+                    ),
                   ],
                 ],
               ),

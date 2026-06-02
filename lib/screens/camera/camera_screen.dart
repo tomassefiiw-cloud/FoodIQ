@@ -12,6 +12,7 @@ import '../../providers/calorie_provider.dart';
 import '../../core/constants/food_database.dart';
 import '../../models/calorie_log.dart';
 import '../../models/ai_models.dart';
+import '../../models/food_item.dart';
 
 class CameraScreen extends ConsumerStatefulWidget {
   const CameraScreen({super.key});
@@ -30,7 +31,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
     final image = await picker.pickImage(source: source, maxWidth: 1024, maxHeight: 1024, imageQuality: 80);
-    
+
     if (image != null) {
       final bytes = await File(image.path).readAsBytes();
       setState(() {
@@ -65,11 +66,107 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
     });
   }
 
-  Future<void> _logFood(AIFoodResult result) async {
+  /// Show meal type selection dialog before logging the food.
+  Future<void> _showMealTypeDialog(AIFoodResult result) async {
+    final MealType? selected = await showModalBottomSheet<MealType>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag handle
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.grey[400],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Text(
+                'Which meal is this?',
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${result.foodName} • ${result.calories.toStringAsFixed(0)} kcal',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Meal type options
+              _MealTypeOption(
+                icon: '🌅',
+                label: 'Breakfast',
+                subtitle: 'Morning meal',
+                color: const Color(0xFFFF9800),
+                onTap: () => Navigator.of(ctx).pop(MealType.breakfast),
+              ),
+              const SizedBox(height: 10),
+              _MealTypeOption(
+                icon: '☀️',
+                label: 'Lunch',
+                subtitle: 'Midday meal',
+                color: const Color(0xFF4CAF50),
+                onTap: () => Navigator.of(ctx).pop(MealType.lunch),
+              ),
+              const SizedBox(height: 10),
+              _MealTypeOption(
+                icon: '🌙',
+                label: 'Dinner',
+                subtitle: 'Evening meal',
+                color: const Color(0xFF3F51B5),
+                onTap: () => Navigator.of(ctx).pop(MealType.dinner),
+              ),
+              const SizedBox(height: 10),
+              _MealTypeOption(
+                icon: '🍿',
+                label: 'Snack',
+                subtitle: 'Between meals',
+                color: const Color(0xFFE91E63),
+                onTap: () => Navigator.of(ctx).pop(MealType.snack),
+              ),
+              const SizedBox(height: 16),
+              // Cancel button
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(null),
+                child: Text(
+                  'Cancel',
+                  style: GoogleFonts.poppins(
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (selected != null) {
+      await _logFood(result, mealType: selected);
+    }
+  }
+
+  Future<void> _logFood(AIFoodResult result, {required MealType mealType}) async {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
 
-    final mealType = FoodDatabase.inferMealType();
     final success = await LogService.addCalorieLog(
       userId: user.id,
       foodId: 'ai_${DateTime.now().millisecondsSinceEpoch}',
@@ -91,13 +188,27 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
       ref.invalidate(weeklyCalorieLogsProvider);
       ref.invalidate(monthlyCalorieLogsProvider);
 
+      final mealLabel = _mealTypeLabel(mealType);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('✅ ${result.foodName} logged! ${result.calories.toStringAsFixed(0)} kcal'),
+          content: Text('✅ ${result.foodName} logged as $mealLabel! ${result.calories.toStringAsFixed(0)} kcal'),
           backgroundColor: AppColors.success,
         ),
       );
       setState(() { _selectedImage = null; _result = null; });
+    }
+  }
+
+  String _mealTypeLabel(MealType type) {
+    switch (type) {
+      case MealType.breakfast:
+        return 'Breakfast 🌅';
+      case MealType.lunch:
+        return 'Lunch ☀️';
+      case MealType.dinner:
+        return 'Dinner 🌙';
+      case MealType.snack:
+        return 'Snack 🍿';
     }
   }
 
@@ -258,8 +369,8 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton.icon(
-                        onPressed: () => _logFood(_result!),
-                        icon: const Icon(Icons.add_circle),
+                        onPressed: () => _showMealTypeDialog(_result!),
+                        icon: const Icon(Icons.restaurant_menu),
                         label: Text('Log This Food', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
@@ -268,11 +379,79 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 6),
+                    Center(
+                      child: Text(
+                        'Tap to select meal type before logging',
+                        style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey),
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A single meal-type option row in the bottom sheet.
+class _MealTypeOption extends StatelessWidget {
+  final String icon;
+  final String label;
+  final String subtitle;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _MealTypeOption({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: color.withOpacity(0.08),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Text(icon, style: const TextStyle(fontSize: 28)),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: color,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: color),
+            ],
+          ),
         ),
       ),
     );

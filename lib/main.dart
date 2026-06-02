@@ -28,6 +28,9 @@ void main() async {
     final prefs = await SharedPreferences.getInstance();
     final enabled = prefs.getBool('meal_reminders_enabled') ?? false;
     if (enabled) {
+      // Request permission again in case it was revoked
+      await NotificationService.requestPermission();
+
       await NotificationService.scheduleMealReminders(
         enabled: true,
         breakfastTime: prefs.getString('reminder_breakfast_time') ??
@@ -37,8 +40,10 @@ void main() async {
         dinnerTime: prefs.getString('reminder_dinner_time') ??
             AppConfig.defaultDinnerTime,
       );
+      print('[main] ✅ Meal reminders re-scheduled on app start');
     }
-  } catch (_) {
+  } catch (e) {
+    print('[main] ⚠️ Failed to re-schedule reminders: $e');
     // best-effort; settings screen will re-schedule when user opens it
   }
 
