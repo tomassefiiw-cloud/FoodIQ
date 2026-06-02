@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/calorie_provider.dart';
@@ -16,7 +15,7 @@ class ProfileScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(title: Text('Profile', style: GoogleFonts.poppins(fontWeight: FontWeight.w600))),
+      appBar: AppBar(title: Text('Profile', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600))),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -39,7 +38,7 @@ class ProfileScreen extends ConsumerWidget {
                     child: Center(
                       child: Text(
                         (user?.name ?? 'U')[0].toUpperCase(),
-                        style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: TextStyle(fontFamily: 'Poppins', fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                     ),
                   ),
@@ -48,14 +47,14 @@ class ProfileScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(user?.name ?? 'User', style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-                        Text(user?.email ?? '', style: GoogleFonts.poppins(fontSize: 13, color: Colors.white.withOpacity(0.8))),
+                        Text(user?.name ?? 'User', style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                        Text(user?.email ?? '', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.white.withOpacity(0.8))),
                         if (user?.isPremiumActive ?? false) ...[
                           const SizedBox(height: 4),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                             decoration: BoxDecoration(color: AppColors.warmGold, borderRadius: BorderRadius.circular(8)),
-                            child: Text('⭐ Premium', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white)),
+                            child: Text('⭐ Premium', style: TextStyle(fontFamily: 'Poppins', fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white)),
                           ),
                         ],
                       ],
@@ -81,8 +80,8 @@ class ProfileScreen extends ConsumerWidget {
                       children: [
                         Icon(Icons.restaurant, color: AppColors.primary, size: 28),
                         const SizedBox(height: 8),
-                        Text('Tracking', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
-                        Text('Active', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: AppColors.success)),
+                        Text('Tracking', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey)),
+                        Text('Active', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, color: AppColors.success)),
                       ],
                     ),
                   ),
@@ -100,8 +99,8 @@ class ProfileScreen extends ConsumerWidget {
                       children: [
                         Icon(Icons.local_fire_department, color: AppColors.primary, size: 28),
                         const SizedBox(height: 8),
-                        Text('Goal', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
-                        Text('${user?.calorieGoal ?? 2000} kcal', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                        Text('Goal', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey)),
+                        Text('${user?.calorieGoal ?? 2000} kcal', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
@@ -119,8 +118,8 @@ class ProfileScreen extends ConsumerWidget {
                       children: [
                         Icon(Icons.water_drop, color: AppColors.waterBlue, size: 28),
                         const SizedBox(height: 8),
-                        Text('Water Goal', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
-                        Text('${user?.waterGoal ?? 2000} ml', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                        Text('Water Goal', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey)),
+                        Text('${user?.waterGoal ?? 2000} ml', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
@@ -144,17 +143,17 @@ class ProfileScreen extends ConsumerWidget {
               showDialog(
                 context: context,
                 builder: (ctx) => AlertDialog(
-                  title: Text('Delete Account?', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-                  content: Text('This action is permanent and cannot be undone. All your data will be lost.', style: GoogleFonts.poppins()),
+                  title: Text('Delete Account?', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
+                  content: Text('This action is permanent and cannot be undone. All your data will be lost.', style: TextStyle(fontFamily: 'Poppins')),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(ctx), child: Text('Cancel', style: GoogleFonts.poppins())),
+                    TextButton(onPressed: () => Navigator.pop(ctx), child: Text('Cancel', style: TextStyle(fontFamily: 'Poppins'))),
                     ElevatedButton(
                       onPressed: () async {
                         Navigator.pop(ctx);
                         await ref.read(authProvider.notifier).logout();
                       },
                       style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-                      child: Text('Delete', style: GoogleFonts.poppins(color: Colors.white)),
+                      child: Text('Delete', style: TextStyle(fontFamily: 'Poppins', color: Colors.white)),
                     ),
                   ],
                 ),
@@ -213,8 +212,8 @@ class _ProfileMenuItem extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 15)),
-                      Text(subtitle, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
+                      Text(title, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 15)),
+                      Text(subtitle, style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey)),
                     ],
                   ),
                 ),

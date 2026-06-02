@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_config.dart';
 import '../../providers/auth_provider.dart';
@@ -21,6 +20,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String _dinnerTime = AppConfig.defaultDinnerTime;
   bool _loaded = false;
   bool _isTestingNotif = false;
+  String _diagnosticInfo = '';
 
   static const _kReminders = 'meal_reminders_enabled';
   static const _kBreakfast = 'reminder_breakfast_time';
@@ -43,6 +43,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _dinnerTime = prefs.getString(_kDinner) ?? AppConfig.defaultDinnerTime;
       _loaded = true;
     });
+    if (_mealReminders) {
+      _loadDiagnosticInfo();
+    }
+  }
+
+  Future<void> _loadDiagnosticInfo() async {
+    final info = await NotificationService.getDiagnosticInfo();
+    if (mounted) {
+      setState(() => _diagnosticInfo = info);
+    }
   }
 
   Future<void> _savePrefs() async {
@@ -62,7 +72,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           SnackBar(
             content: Text('⚠️ Notification permission was not granted. '
                 'Please enable it in your phone settings.',
-                style: GoogleFonts.poppins()),
+                style: TextStyle(fontFamily: 'Poppins')),
             backgroundColor: AppColors.warning,
             duration: const Duration(seconds: 4),
           ),
@@ -85,6 +95,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       await NotificationService.showTestNotification();
       // Also schedule a quick 15-sec test to verify scheduled ones work
       await NotificationService.scheduleQuickTestNotification(delaySeconds: 15);
+      await _loadDiagnosticInfo();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -92,13 +103,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             content: Text(
               '🔔 Reminders ON! A test notification will appear in 15 seconds. '
               'You should see two notifications now.',
-              style: GoogleFonts.poppins(),
-            ),
+              style: TextStyle(fontFamily: 'Poppins')),
             backgroundColor: AppColors.success,
             duration: const Duration(seconds: 5),
           ),
         );
       }
+    } else {
+      _loadDiagnosticInfo();
     }
   }
 
@@ -127,12 +139,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (mounted) {
       // Schedule a quick test to verify the new time works
       await NotificationService.scheduleQuickTestNotification(delaySeconds: 15);
+      await _loadDiagnosticInfo();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             '⏰ $meal reminder updated to $newTime. Test notification in 15s!',
-            style: GoogleFonts.poppins(),
+            style: TextStyle(fontFamily: 'Poppins'),
           ),
           backgroundColor: AppColors.primary,
           duration: const Duration(seconds: 3),
@@ -156,6 +169,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await NotificationService.scheduleQuickTestNotification(delaySeconds: 15);
 
     setState(() => _isTestingNotif = false);
+    await _loadDiagnosticInfo();
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -163,7 +177,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           content: Text(
             '🔔 Test sent! You should see 1 notification now and another in 15s. '
             'If you don\'t see them, check your phone\'s notification settings for FoodIQ.',
-            style: GoogleFonts.poppins(),
+            style: TextStyle(fontFamily: 'Poppins'),
           ),
           backgroundColor: AppColors.primary,
           duration: const Duration(seconds: 5),
@@ -179,7 +193,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final darkMode = ref.watch(darkModeProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Settings', style: GoogleFonts.poppins(fontWeight: FontWeight.w600))),
+      appBar: AppBar(title: Text('Settings', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600))),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -200,7 +214,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('${user?.calorieGoal ?? 2000} kcal', style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                      Text('${user?.calorieGoal ?? 2000} kcal', style: TextStyle(fontFamily: 'Poppins', fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primary)),
                       const Icon(Icons.local_fire_department, color: AppColors.primary),
                     ],
                   ),
@@ -211,7 +225,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: ChoiceChip(
-                            label: Text('$goal', style: GoogleFonts.poppins(fontSize: 12)),
+                            label: Text('$goal', style: TextStyle(fontFamily: 'Poppins', fontSize: 12)),
                             selected: (user?.calorieGoal ?? 2000) == goal,
                             onSelected: (_) {
                               if (user != null) {
@@ -244,7 +258,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('${user?.waterGoal ?? 2000} ml', style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.waterBlue)),
+                      Text('${user?.waterGoal ?? 2000} ml', style: TextStyle(fontFamily: 'Poppins', fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.waterBlue)),
                       const Icon(Icons.water_drop, color: AppColors.waterBlue),
                     ],
                   ),
@@ -255,7 +269,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: ChoiceChip(
-                            label: Text('$goal', style: GoogleFonts.poppins(fontSize: 12)),
+                            label: Text('$goal', style: TextStyle(fontFamily: 'Poppins', fontSize: 12)),
                             selected: (user?.waterGoal ?? 2000) == goal,
                             onSelected: (_) {
                               if (user != null) {
@@ -286,8 +300,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: Column(
                 children: [
                   SwitchListTile(
-                    title: Text('Enable Meal Reminders', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-                    subtitle: Text('Get notified at meal times', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
+                    title: Text('Enable Meal Reminders', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
+                    subtitle: Text('Get notified at meal times', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey)),
                     value: _mealReminders,
                     activeColor: AppColors.primary,
                     onChanged: _toggleReminders,
@@ -308,7 +322,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             : const Icon(Icons.notifications_active),
                         label: Text(
                           _isTestingNotif ? 'Sending...' : 'Send Test Notification',
-                          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                          style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                         ),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.primary,
@@ -319,11 +333,53 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
+                    // Notification Diagnostic Info
+                    if (_diagnosticInfo.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1A1A2E) : const Color(0xFFF8F9FA),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.info_outline, size: 16, color: AppColors.primary),
+                                const SizedBox(width: 6),
+                                Text('Notification Status',
+                                  style: TextStyle(fontFamily: 'Poppins',
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(_diagnosticInfo,
+                              style: TextStyle(fontFamily: 'Poppins',
+                                fontSize: 11,
+                                color: isDark ? Colors.grey[400] : Colors.grey[700],
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
                     Text(
-                      '💡 Tip: If you don\'t see notifications, go to your phone\'s '
-                      'Settings → Apps → FoodIQ → Notifications and make sure '
-                      'they\'re allowed. Also check "Alarms & reminders" permission.',
-                      style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey),
+                      '💡 Tip: If you don\'t see notifications:\n'
+                      '1. Go to Phone Settings → Apps → FoodIQ → Notifications → Enable all\n'
+                      '2. Also check "Alarms & reminders" permission\n'
+                      '3. Disable battery optimization for FoodIQ\n'
+                      '4. On Samsung/Xiaomi/Huawei: lock the app in recent tasks',
+                      style: TextStyle(fontFamily: 'Poppins', fontSize: 11, color: Colors.grey),
                     ),
                   ],
                 ],
@@ -342,8 +398,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)],
               ),
               child: SwitchListTile(
-                title: Text('Dark Mode', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-                subtitle: Text('Easy on the eyes at night', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
+                title: Text('Dark Mode', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
+                subtitle: Text('Easy on the eyes at night', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey)),
                 value: darkMode,
                 activeColor: AppColors.primary,
                 onChanged: (v) => ref.read(darkModeProvider.notifier).set(v),
@@ -366,16 +422,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('App Version', style: GoogleFonts.poppins()),
-                      Text('v${AppConfig.appVersion}', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: AppColors.primary)),
+                      Text('App Version', style: TextStyle(fontFamily: 'Poppins')),
+                      Text('v${AppConfig.appVersion}', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, color: AppColors.primary)),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Database', style: GoogleFonts.poppins()),
-                      Text('183+ foods', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: AppColors.primary)),
+                      Text('Database', style: TextStyle(fontFamily: 'Poppins')),
+                      Text('183+ foods', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, color: AppColors.primary)),
                     ],
                   ),
                 ],
@@ -394,7 +450,7 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(title, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.primary));
+    return Text(title, style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.primary));
   }
 }
 
@@ -410,7 +466,7 @@ class _TimeSetting extends StatelessWidget {
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
-      title: Text(label, style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+      title: Text(label, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500)),
       trailing: TextButton(
         onPressed: () async {
           final parts = time.split(':');
@@ -422,7 +478,7 @@ class _TimeSetting extends StatelessWidget {
             onChanged('${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}');
           }
         },
-        child: Text(time, style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: AppColors.primary, fontSize: 16)),
+        child: Text(time, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, color: AppColors.primary, fontSize: 16)),
       ),
     );
   }

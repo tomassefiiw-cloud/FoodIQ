@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:convert';
@@ -64,6 +63,15 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
             'Could not identify the food. Try a clearer photo with good lighting.';
       }
     });
+
+    // Automatically show meal type selection dialog after successful analysis
+    if (detailed.result != null && mounted) {
+      // Small delay so the user can see the result first
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted && _result != null) {
+        _showMealTypeDialog(_result!);
+      }
+    }
   }
 
   /// Show meal type selection dialog before logging the food.
@@ -71,6 +79,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
     final MealType? selected = await showModalBottomSheet<MealType>(
       context: context,
       backgroundColor: Colors.transparent,
+      isDismissible: true,
       builder: (ctx) {
         final isDark = Theme.of(ctx).brightness == Brightness.dark;
         return Container(
@@ -94,7 +103,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
               ),
               Text(
                 'Which meal is this?',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -102,7 +111,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
               const SizedBox(height: 4),
               Text(
                 '${result.foodName} • ${result.calories.toStringAsFixed(0)} kcal',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 14,
                   color: Colors.grey,
                 ),
@@ -146,7 +155,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                 onPressed: () => Navigator.of(ctx).pop(null),
                 child: Text(
                   'Cancel',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     color: Colors.grey,
                     fontWeight: FontWeight.w500,
                   ),
@@ -195,7 +204,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
           backgroundColor: AppColors.success,
         ),
       );
-      setState(() { _selectedImage = null; _result = null; });
+      setState(() { _selectedImage = null; _result = null; _base64Image = null; });
     }
   }
 
@@ -217,7 +226,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(title: Text('AI Food Scanner', style: GoogleFonts.poppins(fontWeight: FontWeight.w600))),
+      appBar: AppBar(title: Text('AI Food Scanner', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600))),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -247,8 +256,8 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                               children: [
                                 const CircularProgressIndicator(color: AppColors.primary),
                                 const SizedBox(height: 12),
-                                Text('AI is analyzing...', style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
-                                Text('Identifying your food', style: GoogleFonts.poppins(color: Colors.white70, fontSize: 13)),
+                                Text('AI is analyzing...', style: TextStyle(fontFamily: 'Poppins', color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                                Text('Identifying your food', style: TextStyle(fontFamily: 'Poppins', color: Colors.white70, fontSize: 13)),
                               ],
                             ),
                           ),
@@ -260,8 +269,8 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                     children: [
                       Icon(Icons.camera_alt, size: 64, color: AppColors.primary.withOpacity(0.5)),
                       const SizedBox(height: 12),
-                      Text('Take a photo of your food', style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey)),
-                      Text('AI will identify and log it', style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey)),
+                      Text('Take a photo of your food', style: TextStyle(fontFamily: 'Poppins', fontSize: 16, color: Colors.grey)),
+                      Text('AI will identify and log it', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.grey)),
                     ],
                   ),
             ),
@@ -274,7 +283,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                   child: ElevatedButton.icon(
                     onPressed: () => _pickImage(ImageSource.camera),
                     icon: const Icon(Icons.camera_alt),
-                    label: Text('Camera', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                    label: Text('Camera', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
@@ -288,7 +297,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                   child: OutlinedButton.icon(
                     onPressed: () => _pickImage(ImageSource.gallery),
                     icon: const Icon(Icons.photo_library),
-                    label: Text('Gallery', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                    label: Text('Gallery', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.primary,
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -310,7 +319,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                   children: [
                     const Icon(Icons.error_outline, color: AppColors.error),
                     const SizedBox(width: 12),
-                    Expanded(child: Text(_error!, style: GoogleFonts.poppins(color: AppColors.error))),
+                    Expanded(child: Text(_error!, style: TextStyle(fontFamily: 'Poppins', color: AppColors.error))),
                   ],
                 ),
               ),
@@ -337,7 +346,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                           ),
                           child: Text(
                             '${(_result!.confidence * 100).toStringAsFixed(0)}% match',
-                            style: GoogleFonts.poppins(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                            style: TextStyle(fontFamily: 'Poppins', color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
                           ),
                         ),
                         if (_result!.isEthiopian) ...[
@@ -345,13 +354,13 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(color: AppColors.ethGreen, borderRadius: BorderRadius.circular(8)),
-                            child: Text('Ethiopian 🇪🇹', style: GoogleFonts.poppins(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                            child: Text('Ethiopian 🇪🇹', style: TextStyle(fontFamily: 'Poppins', color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
                           ),
                         ],
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Text(_result!.foodName, style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold)),
+                    Text(_result!.foodName, style: TextStyle(fontFamily: 'Poppins', fontSize: 22, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 12),
                     Row(
                       children: [
@@ -371,7 +380,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                       child: ElevatedButton.icon(
                         onPressed: () => _showMealTypeDialog(_result!),
                         icon: const Icon(Icons.restaurant_menu),
-                        label: Text('Log This Food', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
+                        label: Text('Log This Food', style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
@@ -382,8 +391,8 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                     const SizedBox(height: 6),
                     Center(
                       child: Text(
-                        'Tap to select meal type before logging',
-                        style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey),
+                        'Select meal type: Breakfast, Lunch, Dinner, or Snack',
+                        style: TextStyle(fontFamily: 'Poppins', fontSize: 11, color: Colors.grey),
                       ),
                     ),
                   ],
@@ -433,7 +442,7 @@ class _MealTypeOption extends StatelessWidget {
                   children: [
                     Text(
                       label,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: color,
@@ -441,7 +450,7 @@ class _MealTypeOption extends StatelessWidget {
                     ),
                     Text(
                       subtitle,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 12,
                         color: Colors.grey,
                       ),
@@ -468,7 +477,7 @@ class _NutrientChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-      child: Text(label, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+      child: Text(label, style: TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w600, color: color)),
     );
   }
 }

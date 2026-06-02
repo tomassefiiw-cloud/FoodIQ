@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/auth_service.dart';
@@ -102,9 +101,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: const Icon(Icons.restaurant_menu, size: 44, color: Colors.white),
               ),
               const SizedBox(height: 24),
-              Text('Welcome Back!', style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.bold)),
+              Text('Welcome Back!', style: TextStyle(fontFamily: 'Poppins', fontSize: 28, fontWeight: FontWeight.bold)),
               const SizedBox(height: 6),
-              Text('Sign in to continue tracking your nutrition', style: GoogleFonts.poppins(fontSize: 15, color: Colors.grey)),
+              Text('Sign in to continue tracking your nutrition', style: TextStyle(fontFamily: 'Poppins', fontSize: 15, color: Colors.grey)),
               const SizedBox(height: 32),
 
               // Error
@@ -123,7 +122,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const Icon(Icons.error_outline, color: AppColors.error, size: 20),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: Text(_error!, style: GoogleFonts.poppins(color: AppColors.error, fontSize: 13, height: 1.4)),
+                        child: Text(_error!, style: TextStyle(fontFamily: 'Poppins', color: AppColors.error, fontSize: 13, height: 1.4)),
                       ),
                     ],
                   ),
@@ -162,7 +161,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: _resetPassword,
-                  child: Text('Forgot Password?', style: GoogleFonts.poppins(color: AppColors.primary, fontWeight: FontWeight.w500)),
+                  child: Text('Forgot Password?', style: TextStyle(fontFamily: 'Poppins', color: AppColors.primary, fontWeight: FontWeight.w500)),
                 ),
               ),
               const SizedBox(height: 20),
@@ -179,7 +178,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   child: _isLoading
                     ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : Text('Sign In', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
+                    : Text('Sign In', style: TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
                 ),
               ),
               const SizedBox(height: 24),
@@ -188,10 +187,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Don't have an account?", style: GoogleFonts.poppins(color: Colors.grey)),
+                  Text("Don't have an account?", style: TextStyle(fontFamily: 'Poppins', color: Colors.grey)),
                   TextButton(
                     onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen())),
-                    child: Text('Sign Up', style: GoogleFonts.poppins(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                    child: Text('Sign Up', style: TextStyle(fontFamily: 'Poppins', color: AppColors.primary, fontWeight: FontWeight.w600)),
                   ),
                 ],
               ),

@@ -1,7 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -51,7 +50,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text('Analytics',
-            style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+            style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -64,7 +63,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
           labelColor: AppColors.primary,
           unselectedLabelColor: Colors.grey,
           labelStyle:
-              GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
+              TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 14),
           indicatorColor: AppColors.primary,
           tabs: const [
             Tab(text: 'Daily'),
@@ -110,10 +109,10 @@ class _DailyView extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text("Today's Summary",
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 20, fontWeight: FontWeight.bold)),
           Text(DateFormat('EEEE, MMM d, yyyy').format(DateTime.now()),
-              style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
+              style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey)),
           const SizedBox(height: 16),
 
           summaryAsync.when(
@@ -166,7 +165,7 @@ class _DailyView extends ConsumerWidget {
           const SizedBox(height: 16),
 
           Text('Meals breakdown',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 16, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           logsAsync.when(
@@ -201,7 +200,7 @@ class _WeeklyView extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text('Could not load: $e',
-              style: GoogleFonts.poppins(color: Colors.grey)),
+              style: TextStyle(fontFamily: 'Poppins', color: Colors.grey)),
         ),
       ),
       data: (days) => _RangeView(
@@ -235,7 +234,7 @@ class _MonthlyView extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text('Could not load: $e',
-              style: GoogleFonts.poppins(color: Colors.grey)),
+              style: TextStyle(fontFamily: 'Poppins', color: Colors.grey)),
         ),
       ),
       data: (days) => _RangeView(
@@ -302,7 +301,7 @@ class _RangeView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
 
@@ -356,7 +355,7 @@ class _RangeView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Daily calories',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                         fontWeight: FontWeight.w600, fontSize: 14)),
                 const SizedBox(height: 12),
                 SizedBox(
@@ -375,7 +374,7 @@ class _RangeView extends StatelessWidget {
                             return BarTooltipItem(
                               '${DateFormat('MMM d').format(d.date)}\n'
                               '${rod.toY.toStringAsFixed(0)} kcal',
-                              GoogleFonts.poppins(
+                              TextStyle(fontFamily: 'Poppins', 
                                   color: Colors.white, fontSize: 11),
                             );
                           },
@@ -403,7 +402,7 @@ class _RangeView extends StatelessWidget {
                                 child: Text(
                                     DateFormat(labelFormat)
                                         .format(days[i].date),
-                                    style: GoogleFonts.poppins(
+                                    style: TextStyle(fontFamily: 'Poppins', 
                                         fontSize: 9,
                                         color: isDark
                                             ? Colors.white70
@@ -418,7 +417,7 @@ class _RangeView extends StatelessWidget {
                             reservedSize: 40,
                             getTitlesWidget: (value, _) => Text(
                                 '${value.toInt()}',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(fontFamily: 'Poppins', 
                                     fontSize: 9, color: Colors.grey)),
                           ),
                         ),
@@ -463,7 +462,7 @@ class _RangeView extends StatelessWidget {
                         color: AppColors.success.withOpacity(0.7)),
                     const SizedBox(width: 6),
                     Text('Goal (${goal.toStringAsFixed(0)} kcal)',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 11, color: Colors.grey)),
                   ],
                 ),
@@ -487,7 +486,7 @@ class _RangeView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Average macros per day',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                         fontWeight: FontWeight.w600, fontSize: 14)),
                 const SizedBox(height: 12),
                 Row(
@@ -551,7 +550,7 @@ class _MacroPieCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Macro distribution',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                   fontWeight: FontWeight.w600, fontSize: 14)),
           const SizedBox(height: 12),
           SizedBox(
@@ -569,7 +568,7 @@ class _MacroPieCard extends StatelessWidget {
                                 color: AppColors.proteinBlue,
                                 value: p,
                                 title: '${(p / total * 100).round()}%',
-                                titleStyle: GoogleFonts.poppins(
+                                titleStyle: TextStyle(fontFamily: 'Poppins', 
                                     color: Colors.white,
                                     fontWeight: FontWeight.w700,
                                     fontSize: 11),
@@ -579,7 +578,7 @@ class _MacroPieCard extends StatelessWidget {
                                 color: AppColors.carbsOrange,
                                 value: c,
                                 title: '${(c / total * 100).round()}%',
-                                titleStyle: GoogleFonts.poppins(
+                                titleStyle: TextStyle(fontFamily: 'Poppins', 
                                     color: Colors.white,
                                     fontWeight: FontWeight.w700,
                                     fontSize: 11),
@@ -589,7 +588,7 @@ class _MacroPieCard extends StatelessWidget {
                                 color: AppColors.fatRed,
                                 value: f,
                                 title: '${(f / total * 100).round()}%',
-                                titleStyle: GoogleFonts.poppins(
+                                titleStyle: TextStyle(fontFamily: 'Poppins', 
                                     color: Colors.white,
                                     fontWeight: FontWeight.w700,
                                     fontSize: 11),
@@ -638,10 +637,10 @@ class _MacroPieCard extends StatelessWidget {
                             color: AppColors.primary.withOpacity(0.3)),
                         const SizedBox(height: 8),
                         Text('No data yet today',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(fontFamily: 'Poppins', 
                                 color: Colors.grey, fontSize: 13)),
                         Text('Log a meal to see your macro breakdown',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(fontFamily: 'Poppins', 
                                 color: Colors.grey, fontSize: 11)),
                       ],
                     ),
@@ -671,10 +670,10 @@ class _LegendRow extends StatelessWidget {
         const SizedBox(width: 6),
         Expanded(
             child: Text(label,
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 12, fontWeight: FontWeight.w500))),
         Text(value,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 12, fontWeight: FontWeight.w700)),
       ],
     );
@@ -724,7 +723,7 @@ class _StatCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(title,
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                         fontWeight: FontWeight.w600,
                         fontSize: 12,
                         color: Colors.grey)),
@@ -737,12 +736,12 @@ class _StatCard extends StatelessWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(value,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                       fontWeight: FontWeight.w700, fontSize: 22)),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(unit,
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 10, color: Colors.grey)),
               ),
             ],
@@ -789,13 +788,13 @@ class _MiniStat extends StatelessWidget {
       child: Column(
         children: [
           Text(title,
-              style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey)),
+              style: TextStyle(fontFamily: 'Poppins', fontSize: 11, color: Colors.grey)),
           const SizedBox(height: 4),
           Text(value,
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                   fontWeight: FontWeight.w700, fontSize: 18, color: color)),
           Text(unit,
-              style: GoogleFonts.poppins(fontSize: 10, color: Colors.grey)),
+              style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Colors.grey)),
         ],
       ),
     );
@@ -820,15 +819,15 @@ class _MacroRow extends StatelessWidget {
               color: color.withOpacity(0.15), shape: BoxShape.circle),
           child: Center(
             child: Text(label[0],
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                     color: color, fontWeight: FontWeight.w700, fontSize: 16)),
           ),
         ),
         const SizedBox(height: 6),
         Text(label,
-            style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey)),
+            style: TextStyle(fontFamily: 'Poppins', fontSize: 11, color: Colors.grey)),
         Text('${value.toStringAsFixed(1)} g',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
                 fontWeight: FontWeight.w700, fontSize: 14, color: color)),
       ],
     );
@@ -857,10 +856,10 @@ class _MealBreakdownCard extends StatelessWidget {
               const SizedBox(height: 8),
               Text('No meals logged today',
                   style:
-                      GoogleFonts.poppins(color: Colors.grey, fontSize: 13)),
+                      TextStyle(fontFamily: 'Poppins', color: Colors.grey, fontSize: 13)),
               Text('Use the + button to add your first meal',
                   style:
-                      GoogleFonts.poppins(color: Colors.grey, fontSize: 11)),
+                      TextStyle(fontFamily: 'Poppins', color: Colors.grey, fontSize: 11)),
             ],
           ),
         ),
@@ -920,16 +919,16 @@ class _MealBreakdownCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(meal[0].toUpperCase() + meal.substring(1),
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                               fontWeight: FontWeight.w600, fontSize: 14)),
                       Text('${entries.length} item${entries.length == 1 ? '' : 's'}',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                               fontSize: 11, color: Colors.grey)),
                     ],
                   ),
                 ),
                 Text('${cal.toStringAsFixed(0)} kcal',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                         fontWeight: FontWeight.w700,
                         color: AppColors.primary,
                         fontSize: 14)),
@@ -980,7 +979,7 @@ class _ErrorCard extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
               child: Text(message,
-                  style: GoogleFonts.poppins(fontSize: 12),
+                  style: TextStyle(fontFamily: 'Poppins', fontSize: 12),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis)),
         ],

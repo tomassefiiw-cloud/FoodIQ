@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/food_database.dart';
 import '../../models/food_item.dart';
@@ -50,12 +49,12 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> with SingleTicker
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Food Database', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+        title: Text('Food Database', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppColors.primary,
           unselectedLabelColor: Colors.grey,
-          labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
+          labelStyle: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 14),
           indicatorColor: AppColors.primary,
           tabs: const [
             Tab(text: 'Ethiopian 🇪🇹'),
@@ -129,7 +128,7 @@ class _FoodList extends StatelessWidget {
           children: [
             Icon(Icons.search_off, size: 48, color: Colors.grey[300]),
             const SizedBox(height: 12),
-            Text('No foods found', style: GoogleFonts.poppins(color: Colors.grey, fontSize: 16)),
+            Text('No foods found', style: TextStyle(fontFamily: 'Poppins', color: Colors.grey, fontSize: 16)),
           ],
         ),
       );
@@ -175,17 +174,17 @@ class _FoodList extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(food.name, style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14)),
+                          Text(food.name, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 14)),
                           if (food.nameAmharic.isNotEmpty)
-                            Text(food.nameAmharic, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
+                            Text(food.nameAmharic, style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey)),
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              Text('P:${food.protein.toStringAsFixed(1)}g', style: GoogleFonts.poppins(fontSize: 10, color: AppColors.proteinBlue)),
+                              Text('P:${food.protein.toStringAsFixed(1)}g', style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: AppColors.proteinBlue)),
                               const SizedBox(width: 8),
-                              Text('C:${food.carbs.toStringAsFixed(1)}g', style: GoogleFonts.poppins(fontSize: 10, color: AppColors.carbsOrange)),
+                              Text('C:${food.carbs.toStringAsFixed(1)}g', style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: AppColors.carbsOrange)),
                               const SizedBox(width: 8),
-                              Text('F:${food.fat.toStringAsFixed(1)}g', style: GoogleFonts.poppins(fontSize: 10, color: AppColors.fatRed)),
+                              Text('F:${food.fat.toStringAsFixed(1)}g', style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: AppColors.fatRed)),
                             ],
                           ),
                         ],
@@ -194,8 +193,8 @@ class _FoodList extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text('${food.calories.toStringAsFixed(0)}', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.primary)),
-                        Text('kcal', style: GoogleFonts.poppins(fontSize: 10, color: Colors.grey)),
+                        Text('${food.calories.toStringAsFixed(0)}', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.primary)),
+                        Text('kcal', style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Colors.grey)),
                       ],
                     ),
                   ],
@@ -238,13 +237,13 @@ class _FoodLogBottomSheetState extends ConsumerState<_FoodLogBottomSheet> {
         children: [
           Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)))),
           const SizedBox(height: 20),
-          Text(widget.food.name, style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold)),
+          Text(widget.food.name, style: TextStyle(fontFamily: 'Poppins', fontSize: 22, fontWeight: FontWeight.bold)),
           if (widget.food.nameAmharic.isNotEmpty)
-            Text(widget.food.nameAmharic, style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey)),
+            Text(widget.food.nameAmharic, style: TextStyle(fontFamily: 'Poppins', fontSize: 16, color: Colors.grey)),
           const SizedBox(height: 20),
 
           // Meal type selection
-          Text('Meal Type', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+          Text('Meal Type', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           Row(
             children: MealType.values.map((type) {
@@ -262,7 +261,7 @@ class _FoodLogBottomSheetState extends ConsumerState<_FoodLogBottomSheet> {
                     child: Text(
                       type.name[0].toUpperCase() + type.name.substring(1),
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontWeight: FontWeight.w600,
                         fontSize: 12,
                         color: isSelected ? Colors.white : Colors.grey,
@@ -279,8 +278,8 @@ class _FoodLogBottomSheetState extends ConsumerState<_FoodLogBottomSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Portion: ${_portion.toStringAsFixed(1)}x', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16)),
-              Text('${(_portion * widget.food.servingSize).toStringAsFixed(0)}g', style: GoogleFonts.poppins(color: Colors.grey)),
+              Text('Portion: ${_portion.toStringAsFixed(1)}x', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 16)),
+              Text('${(_portion * widget.food.servingSize).toStringAsFixed(0)}g', style: TextStyle(fontFamily: 'Poppins', color: Colors.grey)),
             ],
           ),
           Slider(
@@ -353,7 +352,7 @@ class _FoodLogBottomSheetState extends ConsumerState<_FoodLogBottomSheet> {
                 backgroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-              child: Text('Log Food', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
+              child: Text('Log Food', style: TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
             ),
           ),
           SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 8),
@@ -372,9 +371,9 @@ class _NutrientItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(value, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18, color: color)),
-        Text(unit, style: GoogleFonts.poppins(fontSize: 10, color: Colors.grey)),
-        Text(label, style: GoogleFonts.poppins(fontSize: 10, color: Colors.grey)),
+        Text(value, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 18, color: color)),
+        Text(unit, style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Colors.grey)),
+        Text(label, style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Colors.grey)),
       ],
     );
   }
@@ -405,7 +404,7 @@ class _CustomFoodTab extends ConsumerWidget {
                         size: 64, color: AppColors.primary.withOpacity(0.4)),
                     const SizedBox(height: 16),
                     Text('No custom foods yet',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                             fontWeight: FontWeight.w600,
                             fontSize: 16,
                             color: isDark ? Colors.grey[300] : Colors.grey[800])),
@@ -413,7 +412,7 @@ class _CustomFoodTab extends ConsumerWidget {
                     Text(
                       'Tap the + button to add your own foods with custom nutrition info.',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 13, color: Colors.grey),
                     ),
                     const SizedBox(height: 20),
@@ -422,7 +421,7 @@ class _CustomFoodTab extends ConsumerWidget {
                       icon: const Icon(Icons.add),
                       label: Text('Add food manually',
                           style:
-                              GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                              TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
@@ -483,7 +482,7 @@ class _CustomFoodTab extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(food.name,
-                                    style: GoogleFonts.poppins(
+                                    style: TextStyle(fontFamily: 'Poppins', 
                                         fontWeight: FontWeight.w600,
                                         fontSize: 15)),
                                 const SizedBox(height: 2),
@@ -492,7 +491,7 @@ class _CustomFoodTab extends ConsumerWidget {
                                     'P ${food.protein.toStringAsFixed(0)}g · '
                                     'C ${food.carbs.toStringAsFixed(0)}g · '
                                     'F ${food.fat.toStringAsFixed(0)}g',
-                                    style: GoogleFonts.poppins(
+                                    style: TextStyle(fontFamily: 'Poppins', 
                                         fontSize: 12, color: Colors.grey)),
                               ],
                             ),
@@ -506,10 +505,10 @@ class _CustomFoodTab extends ConsumerWidget {
                                 context: context,
                                 builder: (_) => AlertDialog(
                                   title: Text('Delete ${food.name}?',
-                                      style: GoogleFonts.poppins()),
+                                      style: TextStyle(fontFamily: 'Poppins')),
                                   content: Text(
                                     'This only removes the custom food, not any logs you already added.',
-                                    style: GoogleFonts.poppins(fontSize: 13),
+                                    style: TextStyle(fontFamily: 'Poppins', fontSize: 13),
                                   ),
                                   actions: [
                                     TextButton(
@@ -552,11 +551,11 @@ class _CustomFoodTab extends ConsumerWidget {
                     size: 48, color: Colors.redAccent),
                 const SizedBox(height: 12),
                 Text('Could not load custom foods',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                    style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
                 Text('$e',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 12, color: Colors.grey)),
                 const SizedBox(height: 16),
                 ElevatedButton(
@@ -575,7 +574,7 @@ class _CustomFoodTab extends ConsumerWidget {
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: Text('Add food',
-            style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+            style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
       ),
     );
   }
@@ -658,12 +657,12 @@ class _ManualFoodSheetState extends ConsumerState<_ManualFoodSheet> {
                 ),
                 const SizedBox(height: 16),
                 Text('Add food manually',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 20, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
                 Text(
                   'Type the nutrition info from the package or your own recipe.',
-                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey),
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
@@ -766,14 +765,14 @@ class _ManualFoodSheetState extends ConsumerState<_ManualFoodSheet> {
                   value: _alsoLogNow,
                   onChanged: (v) => setState(() => _alsoLogNow = v ?? true),
                   title: Text('Also log this now (as ${_mealType.name})',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                           fontWeight: FontWeight.w600, fontSize: 14)),
                   subtitle: Text(
                     _alsoLogNow
                         ? 'It will be added to today\'s ${_mealType.name} entries.'
                         : 'Just save it to your custom foods list.',
                     style:
-                        GoogleFonts.poppins(fontSize: 11, color: Colors.grey),
+                        TextStyle(fontFamily: 'Poppins', fontSize: 11, color: Colors.grey),
                   ),
                 ),
                 if (_alsoLogNow) ...[
@@ -785,7 +784,7 @@ class _ManualFoodSheetState extends ConsumerState<_ManualFoodSheet> {
                       return ChoiceChip(
                         label: Text(
                             m.name[0].toUpperCase() + m.name.substring(1),
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(fontFamily: 'Poppins', 
                               fontWeight: FontWeight.w600,
                               fontSize: 12,
                               color: selected ? Colors.white : null,
@@ -818,7 +817,7 @@ class _ManualFoodSheetState extends ConsumerState<_ManualFoodSheet> {
                             child: CircularProgressIndicator(
                                 color: Colors.white, strokeWidth: 2.5))
                         : Text('Save food',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(fontFamily: 'Poppins', 
                                 fontSize: 16, fontWeight: FontWeight.w600)),
                   ),
                 ),

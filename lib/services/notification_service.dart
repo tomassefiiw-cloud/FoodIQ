@@ -13,11 +13,11 @@ class NotificationService {
   static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
-  // Channel ID bumped to _v3 — we need a fresh channel to guarantee
+  // Channel ID bumped to _v4 — we need a fresh channel to guarantee
   // MAX importance on every install (Android channel config is immutable
   // after creation; old channels might retain lower importance on some
   // OEMs even after deletion).
-  static const String _channelId = 'foodiq_meal_reminder_v3';
+  static const String _channelId = 'foodiq_meal_reminder_v4';
   static const String _channelName = 'Meal Reminders';
   static const String _channelDescription =
       'Reminders for breakfast, lunch, and dinner.';
@@ -30,6 +30,7 @@ class NotificationService {
   static const int idDinner = 1003;
   static const int idTest = 9999;
   static const int idConfirm = 9998; // for "reminder set" confirmation
+  static const int idQuickTest = 9997; // for quick 15-sec test
 
   static Future<void> initialize() async {
     if (_initialized) return;
@@ -59,12 +60,13 @@ class NotificationService {
       for (final old in [
         'foodiq_meal_reminder',
         'foodiq_meal_reminder_v2',
+        'foodiq_meal_reminder_v3',
       ]) {
         try {
           await impl?.deleteNotificationChannel(old);
         } catch (_) {}
       }
-      // Create the v3 channel with MAX importance
+      // Create the v4 channel with MAX importance
       await impl?.createNotificationChannel(
         const AndroidNotificationChannel(
           _channelId,
@@ -89,18 +91,34 @@ class NotificationService {
     try {
       final name = await FlutterTimezone.getLocalTimezone();
       if (name.isNotEmpty) {
-        tz.setLocalLocation(tz.getLocation(name));
-        _tzName = name;
-        print('[Notif] Timezone from plugin: $_tzName');
-        return;
+        // Try to resolve the name to a valid location
+        final location = _safeGetLocation(name);
+        if (location != null) {
+          tz.setLocalLocation(location);
+          _tzName = name;
+          print('[Notif] Timezone from plugin: $_tzName');
+          return;
+        }
       }
     } catch (e) {
       print('[Notif] FlutterTimezone failed: $e');
     }
 
-    // 2) Match OS offset to known IANA zone
+    // 2) Try common African timezone names directly
+    final offsetMinutes = DateTime.now().timeZoneOffset.inMinutes;
+    final africanTzs = _guessAfricanTimezone(offsetMinutes);
+    for (final tzName in africanTzs) {
+      final location = _safeGetLocation(tzName);
+      if (location != null) {
+        tz.setLocalLocation(location);
+        _tzName = tzName;
+        print('[Notif] Timezone from African guess: $_tzName');
+        return;
+      }
+    }
+
+    // 3) Match OS offset to known IANA zone
     try {
-      final offsetMinutes = DateTime.now().timeZoneOffset.inMinutes;
       for (final loc in tz.timeZoneDatabase.locations.values) {
         if (loc.currentTimeZone.offset ~/ (60 * 1000) == offsetMinutes) {
           tz.setLocalLocation(loc);
@@ -113,22 +131,48 @@ class NotificationService {
       print('[Notif] offset lookup failed: $e');
     }
 
-    // 3) Etc/GMT±N (POSIX sign INVERTED: UTC+3 -> Etc/GMT-3)
+    // 4) Etc/GMT±N (POSIX sign INVERTED: UTC+3 -> Etc/GMT-3)
     try {
       final hours = DateTime.now().timeZoneOffset.inHours;
       final etcName = hours == 0
           ? 'UTC'
           : 'Etc/GMT${hours > 0 ? '-' : '+'}${hours.abs()}';
-      tz.setLocalLocation(tz.getLocation(etcName));
-      _tzName = etcName;
-      print('[Notif] Timezone from Etc/GMT: $_tzName');
-      return;
+      final location = _safeGetLocation(etcName);
+      if (location != null) {
+        tz.setLocalLocation(location);
+        _tzName = etcName;
+        print('[Notif] Timezone from Etc/GMT: $_tzName');
+        return;
+      }
     } catch (e) {
       print('[Notif] Etc/GMT fallback failed: $e');
     }
 
     tz.setLocalLocation(tz.getLocation('UTC'));
     _tzName = 'UTC';
+  }
+
+  /// Safely get a timezone location, returning null on failure.
+  static tz.Location? _safeGetLocation(String name) {
+    try {
+      return tz.getLocation(name);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Guess African timezone names from the current UTC offset.
+  /// Africa/Nairobi is UTC+3, which is the most common in East Africa.
+  static List<String> _guessAfricanTimezone(int offsetMinutes) {
+    // Map of offset minutes to likely African timezone names
+    final map = <int, List<String>>{
+      -60: ['Africa/Lagos', 'Africa/Algiers', 'Africa/Tunis'],   // UTC+1
+      -120: ['Africa/Cairo', 'Africa/Johannesburg', 'Africa/Maputo'], // UTC+2
+      -180: ['Africa/Nairobi', 'Africa/Addis_Ababa', 'Africa/Kampala', 'Africa/Dar_es_Salaam'], // UTC+3
+      -240: ['Africa/Mogadishu'], // UTC+4
+      0: ['Africa/Casablanca', 'Africa/Accra', 'Africa/Monrovia'], // UTC+0
+    };
+    return map[offsetMinutes] ?? [];
   }
 
   static String get timezoneName => _tzName;
@@ -191,6 +235,16 @@ class NotificationService {
         print('[Notif] scheduleExactAlarm → ${r.name}');
       } catch (_) {}
 
+      // Battery optimization — crucial for OEM ROMs that kill background apps
+      try {
+        final batteryStatus = await Permission.ignoreBatteryOptimizations.status;
+        print('[Notif] ignoreBatteryOptimizations status → $batteryStatus');
+        if (!batteryStatus.isGranted) {
+          final r = await Permission.ignoreBatteryOptimizations.request();
+          print('[Notif] ignoreBatteryOptimizations request → ${r.name}');
+        }
+      } catch (_) {}
+
       return ok;
     }
 
@@ -242,6 +296,7 @@ class NotificationService {
     final d = _parseTime(dinnerTime, fallback: const _T(19, 0));
 
     print('[Notif] 📅 Scheduling: B=${b.h}:${b.m}, L=${l.h}:${l.m}, D=${d.h}:${d.m} (tz=$_tzName)');
+    print('[Notif] Current time: ${tz.TZDateTime.now(tz.local)}');
 
     await _scheduleNotification(
       id: idBreakfast,
@@ -300,7 +355,8 @@ class NotificationService {
           'Breakfast: $breakfastTime\n'
           'Lunch: $lunchTime\n'
           'Dinner: $dinnerTime\n\n'
-          'Reminders will appear at these times every day.',
+          'Reminders will appear at these times every day.\n'
+          'Timezone: $_tzName',
         ),
         ticker: 'FoodIQ Reminders Set',
       ),
@@ -351,20 +407,25 @@ class NotificationService {
 
     // Try exact alarm first; fall back to inexact if blocked (Android 12+).
     try {
+      final canExact = await canScheduleExactAlarms();
+      print('[Notif] canScheduleExactAlarms = $canExact');
+      
       await _plugin.zonedSchedule(
         id,
         title,
         body,
         scheduledDate,
         details,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: canExact 
+            ? AndroidScheduleMode.exactAllowWhileIdle
+            : AndroidScheduleMode.inexactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time,
       );
-      print('[Notif] ✅ id=$id scheduled with EXACT alarm');
+      print('[Notif] ✅ id=$id scheduled with ${canExact ? "EXACT" : "INEXACT"} alarm at $scheduledDate');
     } catch (e) {
-      print('[Notif] ⚠️ exact alarm failed for id=$id: $e');
+      print('[Notif] ⚠️ primary schedule failed for id=$id: $e');
       try {
         await _plugin.zonedSchedule(
           id,
@@ -400,7 +461,8 @@ class NotificationService {
         category: AndroidNotificationCategory.reminder,
         styleInformation: BigTextStyleInformation(
             'Reminders are armed. We\'ll nudge you at breakfast, '
-            'lunch, and dinner — right on your status bar.'),
+            'lunch, and dinner — right on your status bar.\n'
+            'Timezone: $_tzName'),
         ticker: 'FoodIQ',
       ),
       iOS: const DarwinNotificationDetails(
@@ -427,6 +489,9 @@ class NotificationService {
   }) async {
     if (!_initialized) await initialize();
 
+    // Cancel any previous quick test
+    await _plugin.cancel(idQuickTest);
+
     final scheduledDate = tz.TZDateTime.now(tz.local).add(
       Duration(seconds: delaySeconds),
     );
@@ -452,23 +517,26 @@ class NotificationService {
     );
 
     try {
+      final canExact = await canScheduleExactAlarms();
       await _plugin.zonedSchedule(
-        idTest,
+        idQuickTest,
         '🍽️ FoodIQ Test Reminder',
         'If you see this, scheduled notifications are working! '
             'Your meal reminders will fire at the times you set.',
         scheduledDate,
         details,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: canExact 
+            ? AndroidScheduleMode.exactAllowWhileIdle
+            : AndroidScheduleMode.inexactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
       );
-      print('[Notif] ✅ Quick test scheduled in ${delaySeconds}s');
+      print('[Notif] ✅ Quick test scheduled in ${delaySeconds}s (tz=$_tzName, exact=$canExact)');
     } catch (e) {
       print('[Notif] ⚠️ Quick test exact failed: $e');
       try {
         await _plugin.zonedSchedule(
-          idTest,
+          idQuickTest,
           '🍽️ FoodIQ Test Reminder',
           'If you see this, scheduled notifications are working! '
               'Your meal reminders will fire at the times you set.',
@@ -494,6 +562,27 @@ class NotificationService {
   /// Returns pending notification requests (debug aid).
   static Future<List<PendingNotificationRequest>> pending() =>
       _plugin.pendingNotificationRequests();
+
+  /// Get a diagnostic summary string for display in settings.
+  static Future<String> getDiagnosticInfo() async {
+    final notifEnabled = await areNotificationsEnabled();
+    final exactAlarms = await canScheduleExactAlarms();
+    final pendingNotifs = await pending();
+    
+    bool? batteryOptimized;
+    try {
+      batteryOptimized = await Permission.ignoreBatteryOptimizations.isGranted;
+    } catch (_) {
+      batteryOptimized = null;
+    }
+    
+    return 'Timezone: $_tzName\n'
+        'Notifications: ${notifEnabled ? "✅ Enabled" : "❌ Disabled"}\n'
+        'Exact Alarms: ${exactAlarms ? "✅ Allowed" : "⚠️ Not allowed"}\n'
+        'Battery Optimization: ${batteryOptimized == true ? "✅ Exempt" : batteryOptimized == false ? "⚠️ Not exempt" : "❓ Unknown"}\n'
+        'Pending: ${pendingNotifs.length} notification(s)\n'
+        'Current time: ${tz.TZDateTime.now(tz.local).toString().substring(0, 19)}';
+  }
 
   static _T _parseTime(String s, {required _T fallback}) {
     try {

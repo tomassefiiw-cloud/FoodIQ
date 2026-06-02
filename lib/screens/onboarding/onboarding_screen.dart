@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onComplete;
@@ -50,7 +49,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               alignment: Alignment.topRight,
               child: TextButton(
                 onPressed: widget.onComplete,
-                child: Text('Skip', style: GoogleFonts.poppins(color: Colors.grey, fontSize: 16)),
+                child: Text('Skip', style: TextStyle(fontFamily: 'Poppins', color: Colors.grey, fontSize: 16)),
               ),
             ),
             Expanded(
@@ -103,7 +102,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   child: Text(
                     _currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
-                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+                    style: TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
                   ),
                 ),
               ),
@@ -148,13 +147,13 @@ class _OnboardingPage extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(fontSize: 26, fontWeight: FontWeight.bold),
+            style: TextStyle(fontFamily: 'Poppins', fontSize: 26, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           Text(
             description,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey[600], height: 1.6),
+            style: TextStyle(fontFamily: 'Poppins', fontSize: 16, color: Colors.grey[600], height: 1.6),
           ),
         ],
       ),

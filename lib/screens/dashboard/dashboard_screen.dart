@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
@@ -47,8 +46,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           selectedItemColor: AppColors.primary,
           unselectedItemColor: Colors.grey,
           type: BottomNavigationBarType.fixed,
-          selectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 12),
-          unselectedLabelStyle: GoogleFonts.poppins(fontSize: 11),
+          selectedLabelStyle: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 12),
+          unselectedLabelStyle: TextStyle(fontFamily: 'Poppins', fontSize: 11),
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
             BottomNavigationBarItem(icon: Icon(Icons.analytics_rounded), label: 'Stats'),
@@ -65,7 +64,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               foregroundColor: Colors.white,
               icon: const Icon(Icons.add, size: 26),
               label: Text('Add',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                       fontWeight: FontWeight.w600, fontSize: 15)),
             )
           : null,
@@ -97,7 +96,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
             const SizedBox(height: 16),
             Text('What would you like to do?',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 18, fontWeight: FontWeight.w700)),
             const SizedBox(height: 16),
             _AddOption(
@@ -188,11 +187,11 @@ class _AddOption extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                           fontWeight: FontWeight.w600, fontSize: 15)),
                   const SizedBox(height: 2),
                   Text(subtitle,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 12, color: Colors.grey)),
                 ],
               ),
@@ -229,7 +228,7 @@ class _HomeTab extends ConsumerWidget {
               child: const Icon(Icons.restaurant_menu, color: Colors.white, size: 22),
             ),
             const SizedBox(width: 10),
-            Text('FoodIQ', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 22)),
+            Text('FoodIQ', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 22)),
           ],
         ),
         actions: [
@@ -256,12 +255,12 @@ class _HomeTab extends ConsumerWidget {
               // Greeting
               Text(
                 _getGreeting() + ', ${user?.name ?? "Friend"}! 👋',
-                style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w600),
+                style: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 4),
               Text(
                 _getMotivation(),
-                style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600]),
+                style: TextStyle(fontFamily: 'Poppins', fontSize: 14, color: Colors.grey[600]),
               ),
               const SizedBox(height: 20),
 
@@ -411,9 +410,9 @@ class _CalorieRingCard extends StatelessWidget {
                 center: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('${consumed.toStringAsFixed(0)}', style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.bold)),
-                    Text('of $goal', style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey)),
-                    Text('kcal', style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey)),
+                    Text('${consumed.toStringAsFixed(0)}', style: TextStyle(fontFamily: 'Poppins', fontSize: 28, fontWeight: FontWeight.bold)),
+                    Text('of $goal', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.grey)),
+                    Text('kcal', style: TextStyle(fontFamily: 'Poppins', fontSize: 11, color: Colors.grey)),
                   ],
                 ),
               ),
@@ -421,10 +420,10 @@ class _CalorieRingCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Remaining', style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey)),
+                  Text('Remaining', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.grey)),
                   const SizedBox(height: 4),
-                  Text('${(goal - consumed).toStringAsFixed(0)}', style: GoogleFonts.poppins(fontSize: 26, fontWeight: FontWeight.bold, color: _getProgressColor())),
-                  Text('kcal', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
+                  Text('${(goal - consumed).toStringAsFixed(0)}', style: TextStyle(fontFamily: 'Poppins', fontSize: 26, fontWeight: FontWeight.bold, color: _getProgressColor())),
+                  Text('kcal', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey)),
                   const SizedBox(height: 8),
                   _MiniMacro(label: 'Protein', value: '${protein.toStringAsFixed(1)}g', color: AppColors.proteinBlue),
                   _MiniMacro(label: 'Carbs', value: '${carbs.toStringAsFixed(1)}g', color: AppColors.carbsOrange),
@@ -452,8 +451,8 @@ class _MiniMacro extends StatelessWidget {
         children: [
           Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
           const SizedBox(width: 6),
-          Text('$label: ', style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey)),
-          Text(value, style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600)),
+          Text('$label: ', style: TextStyle(fontFamily: 'Poppins', fontSize: 11, color: Colors.grey)),
+          Text(value, style: TextStyle(fontFamily: 'Poppins', fontSize: 11, fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -501,8 +500,8 @@ class _MacroCard extends StatelessWidget {
         children: [
           Icon(icon, size: 20, color: color),
           const SizedBox(height: 4),
-          Text('${value.toStringAsFixed(1)}', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold)),
-          Text(label, style: GoogleFonts.poppins(fontSize: 10, color: Colors.grey)),
+          Text('${value.toStringAsFixed(1)}', style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(label, style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Colors.grey)),
         ],
       ),
     );
@@ -547,8 +546,8 @@ class _WaterTrackerCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Water Tracker', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
-                    Text('$glasses/$targetGlasses glasses', style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey)),
+                    Text('Water Tracker', style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.w600)),
+                    Text('$glasses/$targetGlasses glasses', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.grey)),
                   ]),
                 ],
               ),
@@ -577,7 +576,7 @@ class _WaterTrackerCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text('${currentMl.toStringAsFixed(0)} / ${goalMl.toStringAsFixed(0)} ml', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
+          Text('${currentMl.toStringAsFixed(0)} / ${goalMl.toStringAsFixed(0)} ml', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey)),
         ],
       ),
     );
@@ -610,7 +609,7 @@ class _AITipCard extends StatelessWidget {
             child: const Icon(Icons.smart_toy, color: AppColors.primary),
           ),
           const SizedBox(width: 12),
-          Expanded(child: Text(tip, style: GoogleFonts.poppins(fontSize: 13, height: 1.5))),
+          Expanded(child: Text(tip, style: TextStyle(fontFamily: 'Poppins', fontSize: 13, height: 1.5))),
         ],
       ),
     );
@@ -631,10 +630,10 @@ class _TodayMealsSection extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("Today's Meals", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600)),
+            Text("Today's Meals", style: TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w600)),
             TextButton(
               onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FoodLogScreen())),
-              child: Text('Add Food', style: GoogleFonts.poppins(color: AppColors.primary, fontWeight: FontWeight.w600)),
+              child: Text('Add Food', style: TextStyle(fontFamily: 'Poppins', color: AppColors.primary, fontWeight: FontWeight.w600)),
             ),
           ],
         ),
@@ -652,9 +651,9 @@ class _TodayMealsSection extends ConsumerWidget {
                   children: [
                     Icon(Icons.restaurant, size: 48, color: Colors.grey[300]),
                     const SizedBox(height: 12),
-                    Text('No meals logged yet', style: GoogleFonts.poppins(color: Colors.grey, fontSize: 15)),
+                    Text('No meals logged yet', style: TextStyle(fontFamily: 'Poppins', color: Colors.grey, fontSize: 15)),
                     const SizedBox(height: 4),
-                    Text('Tap + to add your first meal!', style: GoogleFonts.poppins(color: Colors.grey, fontSize: 13)),
+                    Text('Tap + to add your first meal!', style: TextStyle(fontFamily: 'Poppins', color: Colors.grey, fontSize: 13)),
                   ],
                 ),
               );
@@ -733,9 +732,9 @@ class _MealGroup extends StatelessWidget {
               children: [
                 Icon(_getIcon(), size: 18, color: AppColors.primary),
                 const SizedBox(width: 8),
-                Text(_getTitle(), style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14)),
+                Text(_getTitle(), style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 14)),
                 const Spacer(),
-                Text('${totalCal.toStringAsFixed(0)} kcal', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.primary)),
+                Text('${totalCal.toStringAsFixed(0)} kcal', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.primary)),
               ],
             ),
           ),
@@ -752,10 +751,10 @@ class _MealGroup extends StatelessWidget {
             child: ListTile(
               dense: true,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-              title: Text(log.foodName, style: GoogleFonts.poppins(fontSize: 13)),
+              title: Text(log.foodName, style: TextStyle(fontFamily: 'Poppins', fontSize: 13)),
               subtitle: Text('P: ${log.protein.toStringAsFixed(1)}g  C: ${log.carbs.toStringAsFixed(1)}g  F: ${log.fat.toStringAsFixed(1)}g',
-                style: GoogleFonts.poppins(fontSize: 10, color: Colors.grey)),
-              trailing: Text('${log.calories.toStringAsFixed(0)} kcal', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
+                style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Colors.grey)),
+              trailing: Text('${log.calories.toStringAsFixed(0)} kcal', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey)),
             ),
           )),
         ],

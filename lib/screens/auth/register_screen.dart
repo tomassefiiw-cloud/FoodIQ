@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/auth_service.dart';
@@ -97,9 +96,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 child: const Icon(Icons.person_add, size: 32, color: Colors.white),
               ),
               const SizedBox(height: 20),
-              Text('Create Account', style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.bold)),
+              Text('Create Account', style: TextStyle(fontFamily: 'Poppins', fontSize: 28, fontWeight: FontWeight.bold)),
               const SizedBox(height: 6),
-              Text('Join FoodIQ and start tracking your nutrition', style: GoogleFonts.poppins(fontSize: 15, color: Colors.grey)),
+              Text('Join FoodIQ and start tracking your nutrition', style: TextStyle(fontFamily: 'Poppins', fontSize: 15, color: Colors.grey)),
               const SizedBox(height: 28),
 
               // Error message
@@ -118,7 +117,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       const Icon(Icons.error_outline, color: AppColors.error, size: 20),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: Text(_error!, style: GoogleFonts.poppins(color: AppColors.error, fontSize: 13, height: 1.4)),
+                        child: Text(_error!, style: TextStyle(fontFamily: 'Poppins', color: AppColors.error, fontSize: 13, height: 1.4)),
                       ),
                     ],
                   ),
@@ -140,7 +139,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       const Icon(Icons.check_circle_outline, color: AppColors.success, size: 20),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: Text(_success!, style: GoogleFonts.poppins(color: AppColors.success, fontSize: 13, height: 1.4)),
+                        child: Text(_success!, style: TextStyle(fontFamily: 'Poppins', color: AppColors.success, fontSize: 13, height: 1.4)),
                       ),
                     ],
                   ),
@@ -203,8 +202,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Daily Calorie Goal', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16)),
-                        Text('${_calorieGoal.toInt()} kcal', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.primary)),
+                        Text('Daily Calorie Goal', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 16)),
+                        Text('${_calorieGoal.toInt()} kcal', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.primary)),
                       ],
                     ),
                     Slider(
@@ -218,8 +217,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('1000', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
-                        Text('4000', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
+                        Text('1000', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey)),
+                        Text('4000', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey)),
                       ],
                     ),
                   ],
@@ -239,7 +238,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   child: _isLoading
                     ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : Text('Create Account', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
+                    : Text('Create Account', style: TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
                 ),
               ),
               const SizedBox(height: 20),
@@ -258,7 +257,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     Expanded(
                       child: Text(
                         'You may need to confirm your email before signing in.',
-                        style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600], height: 1.3),
+                        style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey[600], height: 1.3),
                       ),
                     ),
                   ],

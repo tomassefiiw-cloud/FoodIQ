@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/ai_service.dart';
 import '../../providers/auth_provider.dart';
@@ -73,7 +72,7 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
             ),
             const SizedBox(width: 10),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('FoodIQ AI', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16)),
+              Text('FoodIQ AI', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 16)),
               Row(
                 children: [
                   Container(
@@ -84,7 +83,7 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
                           shape: BoxShape.circle)),
                   const SizedBox(width: 4),
                   Text(_isOnline ? 'Online' : 'Offline',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 10,
                           color: _isOnline ? AppColors.success : Colors.grey)),
                 ],
@@ -206,7 +205,7 @@ class _ChatBubble extends StatelessWidget {
         ),
         child: Text(
           message.text,
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'Poppins', 
             fontSize: 14,
             color: message.isUser ? Colors.white : null,
             height: 1.5,
@@ -230,7 +229,7 @@ class _QuickChip extends StatelessWidget {
       child: ActionChip(
         label: Text(
           label,
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'Poppins', 
             fontSize: 12,
             fontWeight: FontWeight.w600,
             color: isDark ? AppColors.primary : AppColors.primary,

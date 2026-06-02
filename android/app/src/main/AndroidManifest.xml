@@ -22,6 +22,10 @@
     <!-- Re-schedule notifications across reboots -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
+    <!-- Battery optimization exemption — critical for OEM ROMs that kill
+         background alarms (Samsung, Xiaomi, Huawei, etc.) -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+
     <application
         android:label="FoodIQ"
         android:name="${applicationName}"
@@ -46,13 +50,16 @@
             </intent-filter>
         </activity>
 
-        <!-- flutter_local_notifications receivers -->
+        <!-- flutter_local_notifications receivers — enableOnBackPressure
+             required for Android 14+ (API 34+) -->
         <receiver
             android:exported="false"
+            android:enableOnBackPressure="true"
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"/>
 
         <receiver
             android:exported="false"
+            android:enableOnBackPressure="true"
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
