@@ -1,4 +1,4 @@
-name: Build FoodIQ APK
+name: Build APK
 
 on:
   push:
@@ -8,7 +8,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v4
       
@@ -21,49 +20,17 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.3'
+          flutter-version: '3.44.1'
           channel: 'stable'
       
       - name: Install dependencies
         run: flutter pub get
       
       - name: Build APK
-        run: flutter build apk --release
+        run: flutter build apk --release --no-tree-shake-icons
       
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: foodiq-release-apk
+          name: FoodIQ-APK
           path: build/app/outputs/flutter-apk/app-release.apk
-      
-      - name: Upload to GoFile
-        run: |
-          APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
-          UPLOAD_RESPONSE=$(curl -s -F "file=@${APK_PATH}" https://store1.gofile.io/uploadFile)
-          echo "GoFile Response: $UPLOAD_RESPONSE"
-          DOWNLOAD_LINK=$(echo "$UPLOAD_RESPONSE" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('data', {}).get('downloadPage', 'FAILED'))" 2>/dev/null || echo "PARSE_FAILED")
-          echo "APK_DOWNLOAD_LINK=$DOWNLOAD_LINK" >> $GITHUB_ENV
-          echo "========================================="
-          echo "FoodIQ APK Download Link: $DOWNLOAD_LINK"
-          echo "========================================="
-      
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v1.0.0
-          name: FoodIQ v1.0.0
-          body: |
-            # FoodIQ - Smart Ethiopian Calorie Tracking with AI 🍽️
-            
-            📱 **APK Download:** ${{ env.APK_DOWNLOAD_LINK }}
-            
-            ## Features
-            - 🇪🇹 183+ Ethiopian & Common food database
-            - 📸 AI food recognition (Gemini Vision)
-            - 🤖 AI nutrition assistant (Groq)
-            - 💧 Water tracking
-            - 📊 Calorie analytics
-            - 🔔 Meal reminders
-            - 🌙 Dark/Light mode
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

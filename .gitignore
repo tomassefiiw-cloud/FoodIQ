@@ -44,5 +44,5 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# API Keys - contains sensitive credentials
-lib/core/constants/api_keys.dart
+# API Keys - encoded for build convenience
+# lib/core/constants/api_keys.dart
