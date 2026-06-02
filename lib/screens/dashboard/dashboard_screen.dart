@@ -13,6 +13,7 @@ import '../food_log/food_log_screen.dart';
 import '../analytics/analytics_screen.dart';
 import '../camera/camera_screen.dart';
 import '../profile/profile_screen.dart';
+import '../assistant/assistant_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -28,6 +29,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     _HomeTab(),
     AnalyticsScreen(),
     CameraScreen(),
+    AssistantScreen(),
     ProfileScreen(),
   ];
 
@@ -49,17 +51,156 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           unselectedLabelStyle: GoogleFonts.poppins(fontSize: 11),
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.analytics_rounded), label: 'Analytics'),
-            BottomNavigationBarItem(icon: Icon(Icons.camera_alt_rounded), label: 'Camera'),
+            BottomNavigationBarItem(icon: Icon(Icons.analytics_rounded), label: 'Stats'),
+            BottomNavigationBarItem(icon: Icon(Icons.camera_alt_rounded), label: 'Scan'),
+            BottomNavigationBarItem(icon: Icon(Icons.smart_toy_rounded), label: 'AI'),
             BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'Profile'),
           ],
         ),
       ),
-      floatingActionButton: _currentIndex == 0 ? FloatingActionButton(
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FoodLogScreen())),
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add, color: Colors.white, size: 32),
-      ) : null,
+      floatingActionButton: _currentIndex == 0
+          ? FloatingActionButton.extended(
+              onPressed: () => _showAddSheet(context),
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.add, size: 26),
+              label: Text('Add',
+                  style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600, fontSize: 15)),
+            )
+          : null,
+    );
+  }
+
+  void _showAddSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.darkSurface
+              : Colors.white,
+          borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text('What would you like to do?',
+                style: GoogleFonts.poppins(
+                    fontSize: 18, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 16),
+            _AddOption(
+              icon: Icons.camera_alt_rounded,
+              color: AppColors.primary,
+              title: 'Scan with camera',
+              subtitle: 'Identify food with AI from a photo',
+              onTap: () {
+                Navigator.pop(context);
+                setState(() => _currentIndex = 2);
+              },
+            ),
+            _AddOption(
+              icon: Icons.restaurant_menu_rounded,
+              color: AppColors.proteinBlue,
+              title: 'Browse food database',
+              subtitle: '180+ Ethiopian & common foods',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const FoodLogScreen()));
+              },
+            ),
+            _AddOption(
+              icon: Icons.edit_note_rounded,
+              color: AppColors.success,
+              title: 'Add manually',
+              subtitle: 'Type in food + nutrition by hand',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const FoodLogScreen(initialTab: 2)));
+              },
+            ),
+            _AddOption(
+              icon: Icons.smart_toy_rounded,
+              color: AppColors.carbsOrange,
+              title: 'Ask FoodIQ AI',
+              subtitle: 'Chat with our nutrition assistant',
+              onTap: () {
+                Navigator.pop(context);
+                setState(() => _currentIndex = 3);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AddOption extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  const _AddOption({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 44, height: 44,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600, fontSize: 15)),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: GoogleFonts.poppins(
+                          fontSize: 12, color: Colors.grey)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: Colors.grey[400]),
+          ],
+        ),
+      ),
     );
   }
 }

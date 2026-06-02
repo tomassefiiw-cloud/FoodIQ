@@ -18,6 +18,7 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
   final _controller = TextEditingController();
   final List<_ChatMessage> _messages = [];
   bool _isTyping = false;
+  bool _isOnline = true;
 
   @override
   void initState() {
@@ -42,16 +43,18 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
     final calorieSummary = await ref.read(todayCalorieSummaryProvider.future);
     final waterSummary = await ref.read(todayWaterSummaryProvider.future);
 
-    final response = await AIService.chatWithAssistant(
+    final res = await AIService.chatWithAssistantFull(
       userMessage: text,
       currentCalories: calorieSummary.totalCalories,
       currentWaterMl: waterSummary.totalMl,
       calorieGoal: user?.calorieGoal ?? 2000,
     );
 
+    if (!mounted) return;
     setState(() {
       _isTyping = false;
-      _messages.add(_ChatMessage(text: response, isUser: false));
+      _isOnline = !res.wasOffline;
+      _messages.add(_ChatMessage(text: res.reply, isUser: false));
     });
   }
 
@@ -73,9 +76,17 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
               Text('FoodIQ AI', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16)),
               Row(
                 children: [
-                  Container(width: 6, height: 6, decoration: const BoxDecoration(color: AppColors.success, shape: BoxShape.circle)),
+                  Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                          color: _isOnline ? AppColors.success : Colors.grey,
+                          shape: BoxShape.circle)),
                   const SizedBox(width: 4),
-                  Text('Online', style: GoogleFonts.poppins(fontSize: 10, color: AppColors.success)),
+                  Text(_isOnline ? 'Online' : 'Offline',
+                      style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: _isOnline ? AppColors.success : Colors.grey)),
                 ],
               ),
             ]),

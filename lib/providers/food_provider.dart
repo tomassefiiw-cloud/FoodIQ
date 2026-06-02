@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/constants/food_database.dart';
 import '../models/food_item.dart';
+import '../services/food_service.dart';
+import 'auth_provider.dart';
 
 // Food search query
 final foodSearchQueryProvider = StateProvider<String>((ref) => '');
@@ -29,3 +31,10 @@ final filteredFoodsProvider = Provider<List<FoodItem>>((ref) {
 
 // Selected food tab
 final foodTabProvider = StateProvider<int>((ref) => 0);
+
+// Custom user-created foods (refetched whenever invalidated)
+final customFoodsProvider = FutureProvider<List<FoodItem>>((ref) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return [];
+  return FoodService.getCustomFoods(user.id);
+});

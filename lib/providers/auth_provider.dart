@@ -4,18 +4,29 @@ import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/supabase_service.dart';
 
+// ============================================================================
 // Auth State
+// ============================================================================
 sealed class AuthState {
   const AuthState();
 }
-class AuthInitial extends AuthState { const AuthInitial(); }
+
+class AuthInitial extends AuthState {
+  const AuthInitial();
+}
+
 class AuthAuthenticated extends AuthState {
   final UserModel user;
   const AuthAuthenticated(this.user);
 }
-class AuthUnauthenticated extends AuthState { const AuthUnauthenticated(); }
 
-// Auth Provider
+class AuthUnauthenticated extends AuthState {
+  const AuthUnauthenticated();
+}
+
+// ============================================================================
+// Auth Notifier
+// ============================================================================
 class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier() : super(const AuthInitial()) {
     _checkSession();
@@ -44,7 +55,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> register(String name, String email, String password, {int calorieGoal = 2000}) async {
+  Future<void> register(String name, String email, String password,
+      {int calorieGoal = 2000}) async {
     final user = await AuthService.register(
       name: name,
       email: email,
@@ -73,12 +85,42 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier();
 });
 
-// Dark Mode Provider
-final darkModeProvider = StateProvider<bool>((ref) {
-  return false;
-});
+// ============================================================================
+// Dark Mode Provider — PERSISTENT (SharedPreferences-backed)
+// ============================================================================
+class DarkModeNotifier extends StateNotifier<bool> {
+  DarkModeNotifier() : super(false) {
+    _load();
+  }
 
+  static const _key = 'dark_mode_enabled';
+
+  Future<void> _load() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      state = prefs.getBool(_key) ?? false;
+    } catch (_) {
+      // ignore; default false
+    }
+  }
+
+  Future<void> set(bool value) async {
+    state = value;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_key, value);
+    } catch (_) {/* ignore */}
+  }
+
+  Future<void> toggle() async => set(!state);
+}
+
+final darkModeProvider =
+    StateNotifierProvider<DarkModeNotifier, bool>((ref) => DarkModeNotifier());
+
+// ============================================================================
 // Current User Provider
+// ============================================================================
 final currentUserProvider = Provider<UserModel?>((ref) {
   final authState = ref.watch(authProvider);
   if (authState is AuthAuthenticated) return authState.user;

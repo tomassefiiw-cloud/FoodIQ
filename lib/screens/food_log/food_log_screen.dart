@@ -8,9 +8,12 @@ import '../../models/calorie_log.dart';
 import '../../services/log_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/calorie_provider.dart';
+import '../../providers/food_provider.dart';
+import '../../services/food_service.dart';
 
 class FoodLogScreen extends ConsumerStatefulWidget {
-  const FoodLogScreen({super.key});
+  final int initialTab;
+  const FoodLogScreen({super.key, this.initialTab = 0});
 
   @override
   ConsumerState<FoodLogScreen> createState() => _FoodLogScreenState();
@@ -23,7 +26,11 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> with SingleTicker
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: widget.initialTab.clamp(0, 2),
+    );
   }
 
   @override
@@ -370,23 +377,531 @@ class _NutrientItem extends StatelessWidget {
     );
   }
 }
-
-class _CustomFoodTab extends StatelessWidget {
+// ============================================================================
+// Custom Foods Tab — list user-created foods + add new manually.
+// ============================================================================
+class _CustomFoodTab extends ConsumerWidget {
   const _CustomFoodTab();
 
   @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.add_circle_outline, size: 48, color: AppColors.primary.withOpacity(0.5)),
-          const SizedBox(height: 12),
-          Text('Create custom foods', style: GoogleFonts.poppins(color: Colors.grey, fontSize: 16)),
-          const SizedBox(height: 8),
-          Text('Coming soon in next update!', style: GoogleFonts.poppins(color: Colors.grey, fontSize: 13)),
-        ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final customAsync = ref.watch(customFoodsProvider);
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: customAsync.when(
+        data: (foods) {
+          if (foods.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_circle_outline,
+                        size: 64, color: AppColors.primary.withOpacity(0.4)),
+                    const SizedBox(height: 16),
+                    Text('No custom foods yet',
+                        style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                            color: isDark ? Colors.grey[300] : Colors.grey[800])),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Tap the + button to add your own foods with custom nutrition info.',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                          fontSize: 13, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: () => _showAddManualFood(context, ref),
+                      icon: const Icon(Icons.add),
+                      label: Text('Add food manually',
+                          style:
+                              GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
+            itemCount: foods.length,
+            itemBuilder: (_, i) {
+              final food = foods[i];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkCard : Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withOpacity(0.04), blurRadius: 6)
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(14),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () => showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => _FoodLogBottomSheet(food: food),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44, height: 44,
+                            decoration: BoxDecoration(
+                              gradient: AppColors.orangeGradient,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.restaurant_menu,
+                                color: Colors.white),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(food.name,
+                                    style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15)),
+                                const SizedBox(height: 2),
+                                Text(
+                                    '${food.calories.toStringAsFixed(0)} kcal · '
+                                    'P ${food.protein.toStringAsFixed(0)}g · '
+                                    'C ${food.carbs.toStringAsFixed(0)}g · '
+                                    'F ${food.fat.toStringAsFixed(0)}g',
+                                    style: GoogleFonts.poppins(
+                                        fontSize: 12, color: Colors.grey)),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline,
+                                color: Colors.redAccent),
+                            tooltip: 'Delete',
+                            onPressed: () async {
+                              final ok = await showDialog<bool>(
+                                context: context,
+                                builder: (_) => AlertDialog(
+                                  title: Text('Delete ${food.name}?',
+                                      style: GoogleFonts.poppins()),
+                                  content: Text(
+                                    'This only removes the custom food, not any logs you already added.',
+                                    style: GoogleFonts.poppins(fontSize: 13),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, false),
+                                        child: const Text('Cancel')),
+                                    ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.redAccent),
+                                        onPressed: () =>
+                                            Navigator.pop(context, true),
+                                        child: const Text('Delete')),
+                                  ],
+                                ),
+                              );
+                              if (ok == true) {
+                                await FoodService.deleteCustomFood(food.id);
+                                ref.invalidate(customFoodsProvider);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+        loading: () => const Center(
+            child: CircularProgressIndicator(color: AppColors.primary)),
+        error: (e, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.cloud_off,
+                    size: 48, color: Colors.redAccent),
+                const SizedBox(height: 12),
+                Text('Could not load custom foods',
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text('$e',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                        fontSize: 12, color: Colors.grey)),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => ref.invalidate(customFoodsProvider),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'addCustomFoodFAB',
+        onPressed: () => _showAddManualFood(context, ref),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add),
+        label: Text('Add food',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
       ),
     );
+  }
+
+  static void _showAddManualFood(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _ManualFoodSheet(),
+    );
+  }
+}
+
+// ============================================================================
+// Manual food entry bottom sheet (saves to custom_foods table).
+// ============================================================================
+class _ManualFoodSheet extends ConsumerStatefulWidget {
+  const _ManualFoodSheet();
+
+  @override
+  ConsumerState<_ManualFoodSheet> createState() => _ManualFoodSheetState();
+}
+
+class _ManualFoodSheetState extends ConsumerState<_ManualFoodSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameCtrl = TextEditingController();
+  final _calCtrl = TextEditingController();
+  final _proteinCtrl = TextEditingController(text: '0');
+  final _carbsCtrl = TextEditingController(text: '0');
+  final _fatCtrl = TextEditingController(text: '0');
+  final _fiberCtrl = TextEditingController(text: '0');
+  final _servingCtrl = TextEditingController(text: '100');
+  bool _alsoLogNow = true;
+  MealType _mealType = FoodDatabase.inferMealType();
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _calCtrl.dispose();
+    _proteinCtrl.dispose();
+    _carbsCtrl.dispose();
+    _fatCtrl.dispose();
+    _fiberCtrl.dispose();
+    _servingCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurface : Colors.white,
+          borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text('Add food manually',
+                    style: GoogleFonts.poppins(
+                        fontSize: 20, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 4),
+                Text(
+                  'Type the nutrition info from the package or your own recipe.',
+                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: _nameCtrl,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: const InputDecoration(
+                    labelText: 'Food name',
+                    prefixIcon: Icon(Icons.label_outline),
+                  ),
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? 'Required' : null,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _calCtrl,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        decoration: const InputDecoration(
+                          labelText: 'Calories',
+                          suffixText: 'kcal',
+                          prefixIcon: Icon(Icons.local_fire_department),
+                        ),
+                        validator: (v) {
+                          final n = double.tryParse(v ?? '');
+                          if (n == null || n <= 0) return 'Must be > 0';
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _servingCtrl,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        decoration: const InputDecoration(
+                          labelText: 'Serving',
+                          suffixText: 'g',
+                          prefixIcon: Icon(Icons.scale),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _proteinCtrl,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        decoration: const InputDecoration(
+                          labelText: 'Protein (g)',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _carbsCtrl,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        decoration: const InputDecoration(
+                          labelText: 'Carbs (g)',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _fatCtrl,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        decoration: const InputDecoration(
+                          labelText: 'Fat (g)',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _fiberCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true),
+                  decoration: const InputDecoration(
+                    labelText: 'Fiber (g) — optional',
+                    prefixIcon: Icon(Icons.eco),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  activeColor: AppColors.primary,
+                  value: _alsoLogNow,
+                  onChanged: (v) => setState(() => _alsoLogNow = v ?? true),
+                  title: Text('Also log this now (as ${_mealType.name})',
+                      style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600, fontSize: 14)),
+                  subtitle: Text(
+                    _alsoLogNow
+                        ? 'It will be added to today\'s ${_mealType.name} entries.'
+                        : 'Just save it to your custom foods list.',
+                    style:
+                        GoogleFonts.poppins(fontSize: 11, color: Colors.grey),
+                  ),
+                ),
+                if (_alsoLogNow) ...[
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 6,
+                    children: MealType.values.map((m) {
+                      final selected = m == _mealType;
+                      return ChoiceChip(
+                        label: Text(
+                            m.name[0].toUpperCase() + m.name.substring(1),
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                              color: selected ? Colors.white : null,
+                            )),
+                        selected: selected,
+                        onSelected: (_) => setState(() => _mealType = m),
+                        selectedColor: AppColors.primary,
+                        backgroundColor:
+                            isDark ? AppColors.darkCard : Colors.grey[100],
+                      );
+                    }).toList(),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: _busy ? null : _save,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: _busy
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2.5))
+                        : Text('Save food',
+                            style: GoogleFonts.poppins(
+                                fontSize: 16, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+    final user = ref.read(currentUserProvider);
+    if (user == null) return;
+
+    setState(() => _busy = true);
+    try {
+      final name = _nameCtrl.text.trim();
+      final cal = double.parse(_calCtrl.text);
+      final protein = double.tryParse(_proteinCtrl.text) ?? 0;
+      final carbs = double.tryParse(_carbsCtrl.text) ?? 0;
+      final fat = double.tryParse(_fatCtrl.text) ?? 0;
+      final fiber = double.tryParse(_fiberCtrl.text) ?? 0;
+      final serving = double.tryParse(_servingCtrl.text) ?? 100;
+
+      final ok = await FoodService.addCustomFood(
+        userId: user.id,
+        name: name,
+        calories: cal,
+        protein: protein,
+        carbs: carbs,
+        fat: fat,
+        fiber: fiber,
+        servingSize: serving,
+      );
+
+      if (!ok) throw Exception('Could not save (check internet)');
+
+      // Optionally log it right now too
+      if (_alsoLogNow) {
+        await LogService.addCalorieLog(
+          userId: user.id,
+          foodId: 'manual_${DateTime.now().millisecondsSinceEpoch}',
+          foodName: name,
+          mealType: _mealType,
+          portion: 1.0,
+          calories: cal,
+          protein: protein,
+          carbs: carbs,
+          fat: fat,
+          fiber: fiber,
+          servingSize: serving,
+        );
+        ref.invalidate(todayCalorieLogsProvider);
+        ref.invalidate(todayCalorieSummaryProvider);
+      }
+
+      ref.invalidate(customFoodsProvider);
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _alsoLogNow
+                  ? '✅ $name saved & logged (${cal.toStringAsFixed(0)} kcal)'
+                  : '✅ $name added to your custom foods',
+            ),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 }

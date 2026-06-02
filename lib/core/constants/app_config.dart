@@ -13,7 +13,7 @@ class AppConfig {
   
   // App Info
   static const String appName = 'FoodIQ';
-  static const String appVersion = '1.0.0';
+  static const String appVersion = '1.1.0';
   static const String appTagline = 'Smart Ethiopian Calorie Tracking with AI';
   
   // Default Goals
@@ -27,7 +27,7 @@ class AppConfig {
   
   // AI Models
   static const String groqChatModel = 'llama-3.3-70b-versatile';
-  static const String geminiVisionModel = 'gemini-1.5-flash';
+  static const String geminiVisionModel = 'gemini-2.0-flash';
   
   // Notification Channels
   static const String mealReminderChannelId = 'foodiq_meal_reminder';

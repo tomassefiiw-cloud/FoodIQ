@@ -44,17 +44,22 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
 
   Future<void> _analyzeImage() async {
     if (_base64Image == null) return;
-    
-    setState(() { _isAnalyzing = true; _error = null; });
-    
-    final result = await AIService.recognizeFood(_base64Image!);
-    
+
+    setState(() {
+      _isAnalyzing = true;
+      _error = null;
+    });
+
+    final detailed = await AIService.recognizeFoodDetailed(_base64Image!);
+
+    if (!mounted) return;
     setState(() {
       _isAnalyzing = false;
-      if (result != null) {
-        _result = result;
+      if (detailed.result != null) {
+        _result = detailed.result;
       } else {
-        _error = 'Could not identify the food. Try a clearer photo.';
+        _error = detailed.error ??
+            'Could not identify the food. Try a clearer photo with good lighting.';
       }
     });
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_config.dart';
@@ -18,6 +19,38 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String _breakfastTime = AppConfig.defaultBreakfastTime;
   String _lunchTime = AppConfig.defaultLunchTime;
   String _dinnerTime = AppConfig.defaultDinnerTime;
+  bool _loaded = false;
+
+  static const _kReminders = 'meal_reminders_enabled';
+  static const _kBreakfast = 'reminder_breakfast_time';
+  static const _kLunch = 'reminder_lunch_time';
+  static const _kDinner = 'reminder_dinner_time';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _mealReminders = prefs.getBool(_kReminders) ?? false;
+      _breakfastTime =
+          prefs.getString(_kBreakfast) ?? AppConfig.defaultBreakfastTime;
+      _lunchTime = prefs.getString(_kLunch) ?? AppConfig.defaultLunchTime;
+      _dinnerTime = prefs.getString(_kDinner) ?? AppConfig.defaultDinnerTime;
+      _loaded = true;
+    });
+  }
+
+  Future<void> _savePrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kReminders, _mealReminders);
+    await prefs.setString(_kBreakfast, _breakfastTime);
+    await prefs.setString(_kLunch, _lunchTime);
+    await prefs.setString(_kDinner, _dinnerTime);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -146,6 +179,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         lunchTime: _lunchTime,
                         dinnerTime: _dinnerTime,
                       );
+                      await _savePrefs();
                       if (v) NotificationService.showTestNotification();
                     },
                   ),
@@ -153,14 +187,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const Divider(),
                     _TimeSetting(label: '🌅 Breakfast', time: _breakfastTime, onChanged: (t) {
                       setState(() => _breakfastTime = t);
+                      _savePrefs();
                       NotificationService.scheduleMealReminders(enabled: true, breakfastTime: t, lunchTime: _lunchTime, dinnerTime: _dinnerTime);
                     }),
                     _TimeSetting(label: '🍽️ Lunch', time: _lunchTime, onChanged: (t) {
                       setState(() => _lunchTime = t);
+                      _savePrefs();
                       NotificationService.scheduleMealReminders(enabled: true, breakfastTime: _breakfastTime, lunchTime: t, dinnerTime: _dinnerTime);
                     }),
                     _TimeSetting(label: '🌙 Dinner', time: _dinnerTime, onChanged: (t) {
                       setState(() => _dinnerTime = t);
+                      _savePrefs();
                       NotificationService.scheduleMealReminders(enabled: true, breakfastTime: _breakfastTime, lunchTime: _lunchTime, dinnerTime: t);
                     }),
                   ],
@@ -184,7 +221,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 subtitle: Text('Easy on the eyes at night', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey)),
                 value: darkMode,
                 activeColor: AppColors.primary,
-                onChanged: (v) => ref.read(darkModeProvider.notifier).state = v,
+                onChanged: (v) => ref.read(darkModeProvider.notifier).set(v),
               ),
             ),
             const SizedBox(height: 16),
