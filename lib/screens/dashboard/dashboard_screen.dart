@@ -242,6 +242,8 @@ class _HomeTab extends ConsumerWidget {
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(todayCalorieSummaryProvider);
+          ref.invalidate(weeklyCalorieLogsProvider);
+          ref.invalidate(monthlyCalorieLogsProvider);
           ref.invalidate(todayWaterSummaryProvider);
           ref.invalidate(todayCalorieLogsProvider);
         },
@@ -672,6 +674,8 @@ class _TodayMealsSection extends ConsumerWidget {
                   await LogService.deleteCalorieLog(id);
                   ref.invalidate(todayCalorieLogsProvider);
                   ref.invalidate(todayCalorieSummaryProvider);
+                  ref.invalidate(weeklyCalorieLogsProvider);
+                  ref.invalidate(monthlyCalorieLogsProvider);
                 },
               )).toList(),
             );

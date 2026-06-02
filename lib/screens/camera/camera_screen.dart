@@ -8,6 +8,7 @@ import '../../core/constants/app_colors.dart';
 import '../../services/ai_service.dart';
 import '../../services/log_service.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/calorie_provider.dart';
 import '../../core/constants/food_database.dart';
 import '../../models/calorie_log.dart';
 import '../../models/ai_models.dart';
@@ -84,6 +85,12 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
     );
 
     if (success && mounted) {
+      // Force dashboard + analytics to refresh immediately
+      ref.invalidate(todayCalorieLogsProvider);
+      ref.invalidate(todayCalorieSummaryProvider);
+      ref.invalidate(weeklyCalorieLogsProvider);
+      ref.invalidate(monthlyCalorieLogsProvider);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('✅ ${result.foodName} logged! ${result.calories.toStringAsFixed(0)} kcal'),

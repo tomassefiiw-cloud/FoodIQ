@@ -8,8 +8,7 @@ import '../core/constants/food_database.dart';
 import '../models/ai_models.dart';
 import '../models/food_item.dart';
 
-/// Result wrapper for chat replies so the UI can know whether we hit Groq or
-/// fell back to the offline keyword engine.
+/// Result wrapper for chat replies so the UI can show online/offline state.
 class ChatResult {
   final String reply;
   final bool wasOffline;
@@ -27,16 +26,15 @@ class AIService {
     required double currentWaterMl,
     required int calorieGoal,
   }) async {
-    final result = await chatWithAssistantFull(
+    final r = await chatWithAssistantFull(
       userMessage: userMessage,
       currentCalories: currentCalories,
       currentWaterMl: currentWaterMl,
       calorieGoal: calorieGoal,
     );
-    return result.reply;
+    return r.reply;
   }
 
-  /// Detailed chat call — returns reply + whether we were offline.
   static Future<ChatResult> chatWithAssistantFull({
     required String userMessage,
     required double currentCalories,
@@ -44,7 +42,6 @@ class AIService {
     required int calorieGoal,
   }) async {
     final systemPrompt = '''You are FoodIQ AI, a knowledgeable and friendly nutrition assistant specializing in Ethiopian cuisine.
-You help users track their calories, understand nutritional values of Ethiopian and common foods, and provide practical dietary advice.
 
 Current user context:
 - Calories consumed today: ${currentCalories.toStringAsFixed(0)} / $calorieGoal kcal
@@ -52,7 +49,7 @@ Current user context:
 - Time: ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}
 
 Guidelines:
-- Be friendly, encouraging, and culturally respectful.
+- Be friendly, encouraging, culturally respectful.
 - Provide specific nutritional advice about Ethiopian dishes.
 - Suggest practical meal plans incorporating traditional foods.
 - Keep responses concise (under 200 words).
@@ -86,7 +83,6 @@ Guidelines:
             "I couldn't generate a response. Please try again.";
         return ChatResult(reply: reply, wasOffline: false);
       } else {
-        // Log to console for debugging but show a friendly fallback
         // ignore: avoid_print
         print('[Groq] HTTP ${response.statusCode}: ${response.body}');
         return ChatResult(
@@ -113,11 +109,10 @@ Guidelines:
   }
 
   // ==========================================================================
-  // OFFLINE KEYWORD FALLBACK
+  // OFFLINE FALLBACK
   // ==========================================================================
   static String _getOfflineResponse(String query) {
     final q = query.toLowerCase();
-
     if (q.contains('hello') || q.contains('hi') || q.contains('hey') ||
         q.contains('selam')) {
       return "Selam! 👋 I'm FoodIQ AI — your nutrition assistant. "
@@ -150,8 +145,7 @@ Guidelines:
           '22g protein. Perfect with injera!';
     }
     if (q.contains('water') || q.contains('hydrat')) {
-      return 'Stay hydrated! 💧 Aim for 8 glasses (~2,000 ml) daily. Water '
-          'boosts metabolism, aids digestion, and helps control appetite. '
+      return 'Stay hydrated! 💧 Aim for 8 glasses (~2,000 ml) daily. '
           'Try a glass with each meal and one between meals — bonus glass '
           'for spicy Ethiopian food!';
     }
@@ -163,8 +157,7 @@ Guidelines:
     if (q.contains('low calorie') || q.contains('weight loss')) {
       return 'Light Ethiopian options: Gomen (~85 kcal), Tikil Gomen '
           '(~75 kcal), Atkilt Wot (~105 kcal), Buna (~5 kcal). Focus on '
-          'vegetable wots and watch portion sizes — small daily deficits '
-          'compound into real results.';
+          'vegetable wots and watch portion sizes.';
     }
     if (q.contains('breakfast')) {
       return 'Ethiopian breakfast ideas: Kinche (cracked wheat porridge, '
@@ -179,30 +172,72 @@ Guidelines:
     if (q.contains('meal plan')) {
       return 'Balanced day: Breakfast — Ful + Buna (~250 kcal). Lunch — '
           'Beyaynetu platter + injera (~600 kcal). Snack — fruit + nuts '
-          '(~150 kcal). Dinner — Tibs + injera + side veg (~500 kcal). '
-          'Stay hydrated all day!';
+          '(~150 kcal). Dinner — Tibs + injera + side veg (~500 kcal).';
     }
-    return "I'm in offline mode right now. Try again when you have internet "
-        "for personalised AI replies. Meanwhile, ask me about specific "
-        "Ethiopian foods, protein, water, fasting, or meal planning!";
+    return "I'm in offline mode. Try again when you have internet for "
+        "personalised AI replies. Meanwhile, ask me about specific Ethiopian "
+        "foods, protein, water, fasting, or meal planning!";
   }
 
   // ==========================================================================
-  // GEMINI — Food Image Recognition
+  // GEMINI — Food Image Recognition (with model fallback chain)
   // ==========================================================================
-  /// Returns an [AIFoodResult] on success, or `null` on failure.
-  /// Use [recognizeFoodDetailed] if you also need the error message.
   static Future<AIFoodResult?> recognizeFood(String base64Image) async {
     final detailed = await recognizeFoodDetailed(base64Image);
     return detailed.result;
   }
 
+  /// Vision recognition with **automatic model fallback** on 429 quota errors.
+  /// Returns the first successful result, or the last error if all models fail.
   static Future<({AIFoodResult? result, String? error})>
-      recognizeFoodDetailed(String base64Image) async {
+      recognizeFoodDetailed(String base64Image, {String? mimeType}) async {
+    String? lastError;
+
+    for (final model in AppConfig.geminiVisionFallbacks) {
+      final attempt =
+          await _tryGeminiModel(base64Image, model, mimeType: mimeType);
+      if (attempt.result != null) {
+        // Success!
+        return attempt;
+      }
+
+      lastError = attempt.error;
+
+      // Only continue to next model if it was a quota / availability error.
+      final err = (attempt.error ?? '').toLowerCase();
+      final isQuota = err.contains('429') ||
+          err.contains('quota') ||
+          err.contains('rate') ||
+          err.contains('exceed') ||
+          err.contains('unavailable') ||
+          err.contains('not found') ||
+          err.contains('404') ||
+          err.contains('503');
+
+      if (!isQuota) {
+        // Hard error (parsing, no food, no internet) — don't try fallback.
+        return attempt;
+      }
+      // ignore: avoid_print
+      print('[Gemini] $model hit quota, trying next model...');
+    }
+
+    return (
+      result: null,
+      error: 'All AI vision models reached quota. Please try again in a '
+          'few minutes.\n\nDetail: $lastError',
+    );
+  }
+
+  static Future<({AIFoodResult? result, String? error})> _tryGeminiModel(
+    String base64Image,
+    String model, {
+    String? mimeType,
+  }) async {
     try {
       final url = Uri.parse(
         'https://generativelanguage.googleapis.com/v1beta/models/'
-        '${AppConfig.geminiVisionModel}:generateContent'
+        '$model:generateContent'
         '?key=${AppConfig.geminiApiKey}',
       );
 
@@ -211,7 +246,8 @@ Guidelines:
           {
             'parts': [
               {
-                'text': '''Analyze this food image and identify the primary food shown.
+                'text':
+                    '''Analyze this food image and identify the primary food shown.
 Return ONLY a JSON object (no markdown, no commentary) with this exact schema:
 
 {
@@ -228,15 +264,14 @@ Return ONLY a JSON object (no markdown, no commentary) with this exact schema:
 }
 
 If it appears to be an Ethiopian dish (injera, doro wot, kitfo, shiro, tibs,
-beyaynetu, misir wot, gomen, etc.), set is_ethiopian to true and use the
-common English name.
+beyaynetu, misir wot, gomen, etc.), set is_ethiopian to true.
 
 If the image does NOT clearly show food, return:
 {"food_name": "unknown", "confidence": 0.0, "calories": 0, "protein": 0, "carbs": 0, "fat": 0, "fiber": 0, "serving_size_g": 0, "is_ethiopian": false, "alternative_matches": []}'''
               },
               {
                 'inline_data': {
-                  'mime_type': 'image/jpeg',
+                  'mime_type': mimeType ?? 'image/jpeg',
                   'data': base64Image,
                 }
               },
@@ -245,7 +280,7 @@ If the image does NOT clearly show food, return:
         ],
         'generationConfig': {
           'temperature': 0.3,
-          'maxOutputTokens': 512,
+          'maxOutputTokens': 1024,
           'responseMimeType': 'application/json',
         },
       });
@@ -257,27 +292,40 @@ If the image does NOT clearly show food, return:
 
       if (response.statusCode != 200) {
         // ignore: avoid_print
-        print('[Gemini] HTTP ${response.statusCode}: ${response.body}');
+        print('[Gemini/$model] HTTP ${response.statusCode}: ${response.body}');
+
+        final brief = _briefError(response.body);
+        // Friendlier messages for common cases
+        if (response.statusCode == 429) {
+          return (result: null, error: '429: Quota reached — $brief');
+        }
+        if (response.statusCode == 404) {
+          return (result: null, error: '404: Model not available — $brief');
+        }
         return (
           result: null,
-          error: 'Gemini error ${response.statusCode}: ${_briefError(response.body)}',
+          error: 'HTTP ${response.statusCode}: $brief',
         );
       }
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-      // Validate Gemini envelope
       final candidates = data['candidates'] as List?;
       if (candidates == null || candidates.isEmpty) {
         // ignore: avoid_print
-        print('[Gemini] empty candidates: ${response.body}');
+        print('[Gemini/$model] empty candidates: ${response.body}');
         return (result: null, error: 'AI returned no candidates');
       }
 
       final content = candidates[0]?['content'] as Map<String, dynamic>?;
       final parts = content?['parts'] as List?;
       if (parts == null || parts.isEmpty) {
-        return (result: null, error: 'AI returned no content');
+        // Possibly safety-blocked or MAX_TOKENS
+        final finish = candidates[0]?['finishReason']?.toString() ?? '';
+        return (
+          result: null,
+          error: 'AI returned empty content${finish.isNotEmpty ? ' ($finish)' : ''}'
+        );
       }
 
       final text = (parts[0]?['text'] as String?)?.trim() ?? '';
@@ -288,8 +336,11 @@ If the image does NOT clearly show food, return:
         foodData = jsonDecode(jsonStr) as Map<String, dynamic>;
       } catch (e) {
         // ignore: avoid_print
-        print('[Gemini] JSON parse error: $e | raw: $text');
-        return (result: null, error: 'Could not parse AI reply: $text');
+        print('[Gemini/$model] JSON parse error: $e | raw: $text');
+        return (
+          result: null,
+          error: 'Could not parse AI reply: ${text.substring(0, text.length.clamp(0, 100))}',
+        );
       }
 
       final foodName = (foodData['food_name'] ?? '').toString().trim();
@@ -297,10 +348,12 @@ If the image does NOT clearly show food, return:
 
       if (foodName.isEmpty ||
           foodName.toLowerCase() == 'unknown' ||
+          foodName.toLowerCase() == 'none' ||
           confidence < 0.05) {
         return (
           result: null,
-          error: 'No food detected. Try a clearer photo with the food filling more of the frame.',
+          error: 'No food detected in the image. Try a clearer photo with '
+              'the food filling more of the frame.',
         );
       }
 
@@ -318,7 +371,6 @@ If the image does NOT clearly show food, return:
             .toList(),
       );
 
-      // Try to match against local database for verified nutrition
       return (result: _matchWithLocalDB(raw), error: null);
     } on SocketException catch (e) {
       return (result: null, error: 'No internet: ${e.message}');
@@ -326,16 +378,14 @@ If the image does NOT clearly show food, return:
       return (result: null, error: 'Network error: ${e.message}');
     } catch (e) {
       // ignore: avoid_print
-      print('[Gemini] exception: $e');
+      print('[Gemini/$model] exception: $e');
       return (result: null, error: 'Unexpected error: $e');
     }
   }
 
-  // Extract JSON object from a string that might have markdown fences.
   static String _extractJson(String s) {
     var t = s.trim();
     if (t.startsWith('```')) {
-      // strip ```json … ``` fences
       t = t.replaceAll(RegExp(r'```(?:json)?'), '').trim();
     }
     final firstBrace = t.indexOf('{');
@@ -353,7 +403,7 @@ If the image does NOT clearly show food, return:
         return d['error']['message']?.toString() ?? body;
       }
     } catch (_) {}
-    return body.length > 200 ? '${body.substring(0, 200)}...' : body;
+    return body.length > 150 ? '${body.substring(0, 150)}...' : body;
   }
 
   static AIFoodResult _matchWithLocalDB(AIFoodResult result) {

@@ -224,13 +224,27 @@ class _QuickChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(right: 8),
       child: ActionChip(
-        label: Text(label, style: GoogleFonts.poppins(fontSize: 12)),
+        label: Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isDark ? AppColors.primary : AppColors.primary,
+          ),
+        ),
         onPressed: onTap,
-        backgroundColor: AppColors.primaryBg,
-        side: const BorderSide(color: AppColors.primary, width: 0.5),
+        backgroundColor: isDark
+            ? AppColors.primary.withOpacity(0.18)
+            : AppColors.primaryBg,
+        side: BorderSide(
+          color: AppColors.primary.withOpacity(isDark ? 0.7 : 0.4),
+          width: 1,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
     );
   }

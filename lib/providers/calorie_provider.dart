@@ -22,7 +22,7 @@ final calorieProgressProvider = Provider<double>((ref) {
   final summaryAsync = ref.watch(todayCalorieSummaryProvider);
   final user = ref.watch(currentUserProvider);
   final goal = user?.calorieGoal ?? 2000;
-  
+
   return summaryAsync.when(
     data: (summary) => summary.totalCalories / goal,
     loading: () => 0.0,
@@ -35,7 +35,7 @@ final remainingCaloriesProvider = Provider<double>((ref) {
   final summaryAsync = ref.watch(todayCalorieSummaryProvider);
   final user = ref.watch(currentUserProvider);
   final goal = user?.calorieGoal ?? 2000;
-  
+
   return summaryAsync.when(
     data: (summary) => goal - summary.totalCalories,
     loading: () => goal.toDouble(),
@@ -43,14 +43,30 @@ final remainingCaloriesProvider = Provider<double>((ref) {
   );
 });
 
-// Weekly logs
-final weeklyCalorieLogsProvider = FutureProvider<List<DailySummary>>((ref) async {
+// Weekly logs (last 7 days including today, oldest first)
+final weeklyCalorieLogsProvider =
+    FutureProvider<List<DailySummary>>((ref) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return [];
-  
+
   final summaries = <DailySummary>[];
   final now = DateTime.now();
   for (int i = 6; i >= 0; i--) {
+    final date = now.subtract(Duration(days: i));
+    summaries.add(await LogService.getDailySummary(user.id, date));
+  }
+  return summaries;
+});
+
+// Monthly logs (last 30 days, oldest first)
+final monthlyCalorieLogsProvider =
+    FutureProvider<List<DailySummary>>((ref) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return [];
+
+  final summaries = <DailySummary>[];
+  final now = DateTime.now();
+  for (int i = 29; i >= 0; i--) {
     final date = now.subtract(Duration(days: i));
     summaries.add(await LogService.getDailySummary(user.id, date));
   }

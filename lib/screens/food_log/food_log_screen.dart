@@ -339,6 +339,8 @@ class _FoodLogBottomSheetState extends ConsumerState<_FoodLogBottomSheet> {
                   Navigator.pop(context);
                   ref.invalidate(todayCalorieLogsProvider);
                   ref.invalidate(todayCalorieSummaryProvider);
+                  ref.invalidate(weeklyCalorieLogsProvider);
+                  ref.invalidate(monthlyCalorieLogsProvider);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('✅ ${widget.food.name} logged! ${scaled.calories.toStringAsFixed(0)} kcal'),
@@ -874,6 +876,8 @@ class _ManualFoodSheetState extends ConsumerState<_ManualFoodSheet> {
         );
         ref.invalidate(todayCalorieLogsProvider);
         ref.invalidate(todayCalorieSummaryProvider);
+        ref.invalidate(weeklyCalorieLogsProvider);
+        ref.invalidate(monthlyCalorieLogsProvider);
       }
 
       ref.invalidate(customFoodsProvider);
