@@ -13,6 +13,7 @@ import '../analytics/analytics_screen.dart';
 import '../camera/camera_screen.dart';
 import '../profile/profile_screen.dart';
 import '../assistant/assistant_screen.dart';
+import '../bmi/bmi_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -326,6 +327,10 @@ class _HomeTab extends ConsumerWidget {
 
               // AI Tip
               _AITipCard(tip: _getContextualTip(calorieProgress)),
+              const SizedBox(height: 16),
+
+              // BMI Quick Access
+              _BMIQuickCard(user: user),
               const SizedBox(height: 16),
 
               // Today's Meals
@@ -758,6 +763,89 @@ class _MealGroup extends StatelessWidget {
             ),
           )),
         ],
+      ),
+    );
+  }
+}
+
+// BMI Quick Access Card
+class _BMIQuickCard extends StatelessWidget {
+  final dynamic user;
+  const _BMIQuickCard({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final weight = user?.weight ?? 0.0;
+    final height = user?.height ?? 0.0;
+
+    // Calculate BMI if data available
+    double? bmi;
+    String bmiLabel = 'Not set';
+    Color bmiColor = Colors.grey;
+
+    if (weight > 0 && height > 0) {
+      final heightM = height / 100;
+      bmi = weight / (heightM * heightM);
+      if (bmi < 18.5) {
+        bmiLabel = 'Underweight';
+        bmiColor = Colors.blue;
+      } else if (bmi < 25) {
+        bmiLabel = 'Normal';
+        bmiColor = AppColors.success;
+      } else if (bmi < 30) {
+        bmiLabel = 'Overweight';
+        bmiColor = AppColors.warning;
+      } else {
+        bmiLabel = 'Obese';
+        bmiColor = Colors.red;
+      }
+    }
+
+    return InkWell(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BMIScreen())),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkCard : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 15, offset: const Offset(0, 5))],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44, height: 44,
+              decoration: BoxDecoration(
+                color: bmiColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.monitor_weight, color: bmiColor),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('BMI Calculator', style: TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 2),
+                  if (bmi != null)
+                    Text('BMI: ${bmi.toStringAsFixed(1)} ($bmiLabel)', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: bmiColor))
+                  else
+                    Text('Set your weight & height to get started', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey)),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(bmi != null ? 'View' : 'Set up', style: TextStyle(fontFamily: 'Poppins', fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primary)),
+            ),
+          ],
+        ),
       ),
     );
   }
