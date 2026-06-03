@@ -8,6 +8,7 @@ import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../core/constants/app_strings.dart';
+import 'notification_message_generator.dart';
 
 /// FoodIQ Notification Service — real OS push notifications.
 ///
@@ -312,13 +313,6 @@ class NotificationService {
   }
 
   /// Schedule (or reschedule) the three daily meal reminders.
-  ///
-  /// This method:
-  /// 1. Ensures the notification channel exists with MAX importance
-  /// 2. Cancels all existing meal notifications
-  /// 3. Waits a brief moment to let AlarmManager fully process cancellations
-  /// 4. Schedules fresh notifications with the given times
-  /// 5. On first enable, shows ONE test notification to confirm it works
   static Future<void> scheduleMealReminders({
     required bool enabled,
     String breakfastTime = '08:00',
@@ -344,39 +338,51 @@ class NotificationService {
     // Brief pause to let AlarmManager fully process cancellations.
     await Future.delayed(const Duration(milliseconds: 300));
 
+    final prefs = await SharedPreferences.getInstance();
+    final bmiCategory = prefs.getString('user_bmi_category') ?? 'Normal Weight';
+
     final b = _parseTime(breakfastTime, fallback: const _T(8, 0));
     final l = _parseTime(lunchTime, fallback: const _T(12, 30));
     final d = _parseTime(dinnerTime, fallback: const _T(19, 0));
 
     print('[Notif] Scheduling: B=${b.h}:${b.m}, L=${l.h}:${l.m}, D=${d.h}:${d.m} (tz=$_tzName)');
-    print('[Notif] Current time: ${tz.TZDateTime.now(tz.local)}');
 
     await _scheduleNotification(
       id: idBreakfast,
       title: AppStrings.breakfastReminderTitle,
-      body:
-          NotificationMessages.getBreakfastMessage(DateTime.now().dayOfYear),
+      body: NotificationMessageGenerator.generateMealReminder(
+        time: MealTime.breakfast,
+        bmiCategory: bmiCategory,
+        dayOfYear: DateTime.now().dayOfYear,
+      ),
       hour: b.h,
       minute: b.m,
     );
     await _scheduleNotification(
       id: idLunch,
       title: AppStrings.lunchReminderTitle,
-      body: NotificationMessages.getLunchMessage(DateTime.now().dayOfYear),
+      body: NotificationMessageGenerator.generateMealReminder(
+        time: MealTime.lunch,
+        bmiCategory: bmiCategory,
+        dayOfYear: DateTime.now().dayOfYear,
+      ),
       hour: l.h,
       minute: l.m,
     );
     await _scheduleNotification(
       id: idDinner,
       title: AppStrings.dinnerReminderTitle,
-      body: NotificationMessages.getDinnerMessage(DateTime.now().dayOfYear),
+      body: NotificationMessageGenerator.generateMealReminder(
+        time: MealTime.dinner,
+        bmiCategory: bmiCategory,
+        dayOfYear: DateTime.now().dayOfYear,
+      ),
       hour: d.h,
       minute: d.m,
     );
 
     // Only show test notification if explicitly requested and not already shown
     if (showTest) {
-      final prefs = await SharedPreferences.getInstance();
       final hasShownInstallTest = prefs.getBool('install_test_shown') ?? false;
       if (!hasShownInstallTest) {
         await showInstallTestNotification();
@@ -395,9 +401,6 @@ class NotificationService {
     try {
       final pending = await _plugin.pendingNotificationRequests();
       print('[Notif] ${pending.length} notifications now pending');
-      for (final p in pending) {
-        print('[Notif]   id=${p.id} title="${p.title}"');
-      }
     } catch (_) {}
   }
 
@@ -442,7 +445,6 @@ class NotificationService {
 
   /// Schedule meal logging reminders — if user hasn't logged a meal by a
   /// certain time after the meal reminder, send a follow-up reminder.
-  /// These fire 1.5 hours after each meal time.
   static Future<void> scheduleMealLogReminders({
     String breakfastTime = '08:00',
     String lunchTime = '12:30',
@@ -450,21 +452,36 @@ class NotificationService {
   }) async {
     if (!_initialized) await initialize();
 
-    // Cancel all potential meal log reminder IDs (since we use idMealLogReminder + hour)
+    // Cancel all potential meal log reminder IDs
     for (int i = 0; i < 24; i++) {
       await _plugin.cancel(idMealLogReminder + i);
     }
+
+    final prefs = await SharedPreferences.getInstance();
+    final bmiCategory = prefs.getString('user_bmi_category') ?? 'Normal Weight';
 
     final b = _parseTime(breakfastTime, fallback: const _T(8, 0));
     final l = _parseTime(lunchTime, fallback: const _T(12, 30));
     final d = _parseTime(dinnerTime, fallback: const _T(19, 0));
 
-    // We'll use a single daily reminder that checks the current meal period
-    // Schedule a mid-morning check (9:30) and mid-afternoon check (14:00) 
-    // and evening check (20:30) to remind if no meal logged
-    await _scheduleMealLogCheck(hour: b.h == 8 ? 9 : b.h + 1, minute: 30); // 1.5h after breakfast
-    await _scheduleMealLogCheck(hour: l.h == 12 ? 14 : l.h + 1, minute: 0); // 1.5h after lunch
-    await _scheduleMealLogCheck(hour: d.h == 19 ? 20 : d.h + 1, minute: 30); // 1.5h after dinner
+    await _scheduleMealLogCheck(
+      hour: b.h == 8 ? 9 : b.h + 1, 
+      minute: 30, 
+      time: MealTime.breakfast, 
+      bmiCategory: bmiCategory,
+    ); 
+    await _scheduleMealLogCheck(
+      hour: l.h == 12 ? 14 : l.h + 1, 
+      minute: 0, 
+      time: MealTime.lunch, 
+      bmiCategory: bmiCategory,
+    ); 
+    await _scheduleMealLogCheck(
+      hour: d.h == 19 ? 20 : d.h + 1, 
+      minute: 30, 
+      time: MealTime.dinner, 
+      bmiCategory: bmiCategory,
+    ); 
     
     print('[Notif] Meal log reminder notifications scheduled');
   }
@@ -473,9 +490,10 @@ class NotificationService {
   static Future<void> _scheduleMealLogCheck({
     required int hour,
     required int minute,
+    required MealTime time,
+    required String bmiCategory,
   }) async {
     final scheduledDate = _nextInstanceOfTime(hour, minute);
-    print('[Notif] Scheduling meal log check at $scheduledDate (tz=$_tzName)');
 
     final details = NotificationDetails(
       android: AndroidNotificationDetails(
@@ -489,8 +507,10 @@ class NotificationService {
         visibility: NotificationVisibility.public,
         category: AndroidNotificationCategory.reminder,
         styleInformation: BigTextStyleInformation(
-          'You haven\'t logged any food yet today. Don\'t forget to track your meals! '
-          'Try something from our food database.',
+          NotificationMessageGenerator.generateLogReminder(
+            time: time,
+            bmiCategory: bmiCategory,
+          ),
         ),
         autoCancel: true,
         showWhen: true,
@@ -503,26 +523,17 @@ class NotificationService {
       ),
     );
 
-    // Determine the meal-specific message based on time
     String title;
-    String body;
-    if (hour <= 11) {
-      title = 'Breakfast Reminder';
-      body = 'You haven\'t logged breakfast yet! Start your day right — try Kinche, Ful, or Chechebsa from our database.';
-    } else if (hour <= 16) {
-      title = 'Lunch Reminder';
-      body = 'You haven\'t logged lunch yet! Fuel your afternoon — try Injera with Shiro or Misir Wot.';
-    } else {
-      title = 'Dinner Reminder';
-      body = 'You haven\'t logged dinner yet! Wrap up your day — try Tibs or Doro Wot with Injera.';
-    }
+    if (time == MealTime.breakfast) title = 'Breakfast Reminder';
+    else if (time == MealTime.lunch) title = 'Lunch Reminder';
+    else title = 'Dinner Reminder';
 
     try {
       final canExact = await canScheduleExactAlarms();
       await _plugin.zonedSchedule(
-        idMealLogReminder + hour, // unique ID per time slot
+        idMealLogReminder + hour,
         title,
-        body,
+        NotificationMessageGenerator.generateLogReminder(time: time, bmiCategory: bmiCategory),
         scheduledDate,
         details,
         androidScheduleMode: canExact
@@ -532,7 +543,6 @@ class NotificationService {
             UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time,
       );
-      print('[Notif] Meal log check scheduled at $scheduledDate');
     } catch (e) {
       print('[Notif] Meal log check schedule failed: $e');
     }

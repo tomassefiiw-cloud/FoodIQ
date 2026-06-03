@@ -120,8 +120,16 @@ class _BMIScreenState extends ConsumerState<BMIScreen> {
     // Save to user profile
     _saveToProfile(weight, height);
 
+    // Save BMI category to prefs for notifications
+    _saveBmiCategory(category);
+
     // Auto-suggest meals based on BMI
     _suggestMealsFromDatabase(bmi);
+  }
+
+  Future<void> _saveBmiCategory(String category) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_bmi_category', category);
   }
 
   Future<void> _saveToProfile(double weight, double height) async {
