@@ -39,6 +39,7 @@ void main() async {
             AppConfig.defaultLunchTime,
         dinnerTime: prefs.getString('reminder_dinner_time') ??
             AppConfig.defaultDinnerTime,
+        showTest: false,
       );
       print('[main] ✅ Meal reminders re-scheduled on app start');
     }

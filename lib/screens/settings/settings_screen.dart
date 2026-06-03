@@ -85,6 +85,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       breakfastTime: _breakfastTime,
       lunchTime: _lunchTime,
       dinnerTime: _dinnerTime,
+      showTest: enabled, // Only show test notification when enabling
     );
     await _savePrefs();
 
@@ -131,6 +132,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         breakfastTime: _breakfastTime,
         lunchTime: _lunchTime,
         dinnerTime: _dinnerTime,
+        showTest: false,
       );
 
       if (mounted) {

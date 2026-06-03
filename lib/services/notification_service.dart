@@ -324,6 +324,7 @@ class NotificationService {
     String breakfastTime = '08:00',
     String lunchTime = '12:30',
     String dinnerTime = '19:00',
+    bool showTest = false,
   }) async {
     if (!_initialized) await initialize();
 
@@ -373,12 +374,14 @@ class NotificationService {
       minute: d.m,
     );
 
-    // Check if this is the first time enabling reminders — show ONE test notification
-    final prefs = await SharedPreferences.getInstance();
-    final hasShownInstallTest = prefs.getBool('install_test_shown') ?? false;
-    if (!hasShownInstallTest) {
-      await showInstallTestNotification();
-      await prefs.setBool('install_test_shown', true);
+    // Only show test notification if explicitly requested and not already shown
+    if (showTest) {
+      final prefs = await SharedPreferences.getInstance();
+      final hasShownInstallTest = prefs.getBool('install_test_shown') ?? false;
+      if (!hasShownInstallTest) {
+        await showInstallTestNotification();
+        await prefs.setBool('install_test_shown', true);
+      }
     }
 
     // Schedule meal logging reminders
@@ -447,8 +450,10 @@ class NotificationService {
   }) async {
     if (!_initialized) await initialize();
 
-    // Cancel existing log reminders
-    await _plugin.cancel(idMealLogReminder);
+    // Cancel all potential meal log reminder IDs (since we use idMealLogReminder + hour)
+    for (int i = 0; i < 24; i++) {
+      await _plugin.cancel(idMealLogReminder + i);
+    }
 
     final b = _parseTime(breakfastTime, fallback: const _T(8, 0));
     final l = _parseTime(lunchTime, fallback: const _T(12, 30));
