@@ -786,14 +786,15 @@ class _BMIQuickCard extends StatelessWidget {
 
     if (weight > 0 && height > 0) {
       final heightM = height / 100;
-      bmi = weight / (heightM * heightM);
-      if (bmi < 18.5) {
+      final calculatedBmi = weight / (heightM * heightM);
+      bmi = calculatedBmi;
+      if (calculatedBmi < 18.5) {
         bmiLabel = 'Underweight';
         bmiColor = Colors.blue;
-      } else if (bmi < 25) {
+      } else if (calculatedBmi < 25) {
         bmiLabel = 'Normal';
         bmiColor = AppColors.success;
-      } else if (bmi < 30) {
+      } else if (calculatedBmi < 30) {
         bmiLabel = 'Overweight';
         bmiColor = AppColors.warning;
       } else {
