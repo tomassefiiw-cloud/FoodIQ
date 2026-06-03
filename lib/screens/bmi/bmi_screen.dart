@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_config.dart';
@@ -136,6 +137,14 @@ class _BMIScreenState extends ConsumerState<BMIScreen> {
         ),
       );
     }
+
+    // Save BMI to SharedPreferences so notification service can use it
+    // for personalized food suggestions in meal log reminders
+    final heightM = height / 100;
+    final bmi = weight / (heightM * heightM);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('user_bmi', bmi);
+    print('[BMI] Saved BMI ${bmi.toStringAsFixed(1)} to prefs for notifications');
   }
 
   /// Suggest meals from the local database based on BMI
