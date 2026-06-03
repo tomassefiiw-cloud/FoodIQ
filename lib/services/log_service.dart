@@ -168,4 +168,50 @@ class LogService {
       return WaterSummary(date: date);
     }
   }
+
+  /// Returns one [WaterSummary] per day for the last [days] days (oldest first,
+  /// today last). Fetches the whole range in a single query and buckets the
+  /// logs by day so the Analytics weekly/monthly water charts stay fast.
+  static Future<List<WaterSummary>> getWaterSummariesForRange(
+    String userId,
+    int days,
+  ) async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final startDay = today.subtract(Duration(days: days - 1));
+    final endExclusive = today.add(const Duration(days: 1));
+
+    // Build the ordered list of day buckets (oldest -> today).
+    final buckets = <DateTime>[
+      for (int i = days - 1; i >= 0; i--)
+        DateTime(now.year, now.month, now.day).subtract(Duration(days: i)),
+    ];
+
+    try {
+      final response = await SupabaseService.waterLogs
+          .select()
+          .eq('user_id', userId)
+          .gte('logged_at', startDay.toIso8601String())
+          .lt('logged_at', endExclusive.toIso8601String());
+
+      final logs =
+          response.map<WaterLog>((json) => WaterLog.fromJson(json)).toList();
+
+      // Group logs by their local day.
+      final byDay = <String, List<WaterLog>>{};
+      for (final log in logs) {
+        final d = log.loggedAt.toLocal();
+        final key = '${d.year}-${d.month}-${d.day}';
+        byDay.putIfAbsent(key, () => []).add(log);
+      }
+
+      return buckets.map((day) {
+        final key = '${day.year}-${day.month}-${day.day}';
+        return WaterSummary.fromLogs(day, byDay[key] ?? const []);
+      }).toList();
+    } catch (e) {
+      // On error, return empty summaries so the UI still renders the buckets.
+      return buckets.map((day) => WaterSummary(date: day)).toList();
+    }
+  }
 }

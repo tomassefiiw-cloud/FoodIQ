@@ -307,6 +307,8 @@ class _HomeTab extends ConsumerWidget {
                       LogService.addWaterLog(userId: userId, amountMl: 250).then((_) {
                         ref.invalidate(todayWaterSummaryProvider);
                         ref.invalidate(todayWaterLogsProvider);
+                        ref.invalidate(weeklyWaterLogsProvider);
+                        ref.invalidate(monthlyWaterLogsProvider);
                       });
                     }
                   },
@@ -316,6 +318,8 @@ class _HomeTab extends ConsumerWidget {
                       LogService.removeLastWaterLog(userId).then((_) {
                         ref.invalidate(todayWaterSummaryProvider);
                         ref.invalidate(todayWaterLogsProvider);
+                        ref.invalidate(weeklyWaterLogsProvider);
+                        ref.invalidate(monthlyWaterLogsProvider);
                       });
                     }
                   },

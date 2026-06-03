@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../models/calorie_log.dart';
+import '../../models/water_log.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/calorie_provider.dart';
 import '../../providers/water_provider.dart';
@@ -41,6 +42,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
     ref.invalidate(todayWaterSummaryProvider);
     ref.invalidate(weeklyCalorieLogsProvider);
     ref.invalidate(monthlyCalorieLogsProvider);
+    ref.invalidate(weeklyWaterLogsProvider);
+    ref.invalidate(monthlyWaterLogsProvider);
     await Future.delayed(const Duration(milliseconds: 300));
   }
 
@@ -190,8 +193,10 @@ class _WeeklyView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final weeklyAsync = ref.watch(weeklyCalorieLogsProvider);
+    final weeklyWaterAsync = ref.watch(weeklyWaterLogsProvider);
     final user = ref.watch(currentUserProvider);
     final goal = (user?.calorieGoal ?? 2000).toDouble();
+    final waterGoal = (user?.waterGoal ?? 2000).toDouble();
 
     return weeklyAsync.when(
       loading: () => const Center(
@@ -209,6 +214,8 @@ class _WeeklyView extends ConsumerWidget {
         goal: goal,
         labelFormat: 'E',
         isDark: isDark,
+        waterDays: weeklyWaterAsync.asData?.value ?? const [],
+        waterGoal: waterGoal,
       ),
     );
   }
@@ -224,8 +231,10 @@ class _MonthlyView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final monthlyAsync = ref.watch(monthlyCalorieLogsProvider);
+    final monthlyWaterAsync = ref.watch(monthlyWaterLogsProvider);
     final user = ref.watch(currentUserProvider);
     final goal = (user?.calorieGoal ?? 2000).toDouble();
+    final waterGoal = (user?.waterGoal ?? 2000).toDouble();
 
     return monthlyAsync.when(
       loading: () => const Center(
@@ -243,6 +252,8 @@ class _MonthlyView extends ConsumerWidget {
         goal: goal,
         labelFormat: 'd',
         isDark: isDark,
+        waterDays: monthlyWaterAsync.asData?.value ?? const [],
+        waterGoal: waterGoal,
       ),
     );
   }
@@ -256,12 +267,16 @@ class _RangeView extends StatelessWidget {
   final double goal;
   final String labelFormat;
   final bool isDark;
+  final List<WaterSummary> waterDays;
+  final double waterGoal;
   const _RangeView({
     required this.title,
     required this.days,
     required this.goal,
     required this.labelFormat,
     required this.isDark,
+    this.waterDays = const [],
+    this.waterGoal = 2000,
   });
 
   @override
@@ -293,6 +308,23 @@ class _RangeView extends StatelessWidget {
         ? 0.0
         : daysWithData.map((d) => d.totalFat).reduce((a, b) => a + b) /
             daysWithData.length;
+
+    // ---- Water stats over the same range ----
+    final hasWater = waterDays.isNotEmpty;
+    final waterDaysWithData =
+        waterDays.where((w) => w.totalMl > 0).toList();
+    final avgWaterMl = waterDays.isEmpty
+        ? 0.0
+        : waterDays.map((w) => w.totalMl).reduce((a, b) => a + b) /
+            waterDays.length;
+    final totalWaterMl =
+        waterDays.fold<double>(0.0, (a, b) => a + b.totalMl);
+    final waterDaysOnTrack =
+        waterDays.where((w) => w.totalMl >= waterGoal).length;
+    final maxWaterMl = waterDays.isEmpty
+        ? waterGoal * 1.2
+        : waterDays.map((w) => w.totalMl).reduce((a, b) => a > b ? a : b);
+    final avgWaterGlasses = avgWaterMl / WaterLog.mlPerGlass;
 
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -510,6 +542,212 @@ class _RangeView extends StatelessWidget {
                             color: AppColors.fatRed)),
                   ],
                 ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // ================= WATER SECTION =================
+          Row(
+            children: [
+              Icon(Icons.water_drop, color: AppColors.waterBlue, size: 18),
+              const SizedBox(width: 6),
+              Text('Water intake',
+                  style: TextStyle(fontFamily: 'Poppins',
+                      fontSize: 16, fontWeight: FontWeight.w600)),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Water mini-stats
+          Row(
+            children: [
+              Expanded(
+                child: _MiniStat(
+                  title: 'Daily avg',
+                  value: avgWaterGlasses.toStringAsFixed(1),
+                  unit: 'glasses',
+                  color: AppColors.waterBlue,
+                  isDark: isDark,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _MiniStat(
+                  title: 'Total',
+                  value: (totalWaterMl / 1000).toStringAsFixed(1),
+                  unit: 'litres',
+                  color: AppColors.waterBlue,
+                  isDark: isDark,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _MiniStat(
+                  title: 'On track',
+                  value: '$waterDaysOnTrack',
+                  unit: '/ ${waterDays.length}',
+                  color: AppColors.success,
+                  isDark: isDark,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Water bar chart
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCard : Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.04), blurRadius: 8)
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Daily water (glasses)',
+                    style: TextStyle(fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600, fontSize: 14)),
+                const SizedBox(height: 12),
+                if (!hasWater)
+                  SizedBox(
+                    height: 120,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.water_drop_outlined,
+                              size: 40,
+                              color: AppColors.waterBlue.withOpacity(0.3)),
+                          const SizedBox(height: 8),
+                          Text('No water logged in this period',
+                              style: TextStyle(fontFamily: 'Poppins',
+                                  color: Colors.grey, fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                  )
+                else ...[
+                  SizedBox(
+                    height: 220,
+                    child: BarChart(
+                      BarChartData(
+                        maxY: ((maxWaterMl > waterGoal
+                                    ? maxWaterMl
+                                    : waterGoal) *
+                                1.15) /
+                            WaterLog.mlPerGlass,
+                        barTouchData: BarTouchData(
+                          enabled: true,
+                          touchTooltipData: BarTouchTooltipData(
+                            getTooltipColor: (_) => AppColors.waterBlue,
+                            getTooltipItem: (group, _, rod, __) {
+                              final i = group.x.toInt();
+                              if (i < 0 || i >= waterDays.length) return null;
+                              final w = waterDays[i];
+                              return BarTooltipItem(
+                                '${DateFormat('MMM d').format(w.date)}\n'
+                                '${rod.toY.toStringAsFixed(1)} glasses\n'
+                                '${w.totalMl.toStringAsFixed(0)} ml',
+                                TextStyle(fontFamily: 'Poppins',
+                                    color: Colors.white, fontSize: 11),
+                              );
+                            },
+                          ),
+                        ),
+                        gridData: const FlGridData(
+                            show: true, drawVerticalLine: false),
+                        borderData: FlBorderData(show: false),
+                        titlesData: FlTitlesData(
+                          topTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false)),
+                          rightTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false)),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              interval: waterDays.length > 15 ? 5 : 1,
+                              getTitlesWidget: (value, _) {
+                                final i = value.toInt();
+                                if (i < 0 || i >= waterDays.length) {
+                                  return const SizedBox.shrink();
+                                }
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 6),
+                                  child: Text(
+                                      DateFormat(labelFormat)
+                                          .format(waterDays[i].date),
+                                      style: TextStyle(fontFamily: 'Poppins',
+                                          fontSize: 9,
+                                          color: isDark
+                                              ? Colors.white70
+                                              : Colors.black54)),
+                                );
+                              },
+                            ),
+                          ),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 32,
+                              getTitlesWidget: (value, _) => Text(
+                                  '${value.toInt()}',
+                                  style: TextStyle(fontFamily: 'Poppins',
+                                      fontSize: 9, color: Colors.grey)),
+                            ),
+                          ),
+                        ),
+                        extraLinesData: ExtraLinesData(horizontalLines: [
+                          HorizontalLine(
+                            y: waterGoal / WaterLog.mlPerGlass,
+                            color: AppColors.success.withOpacity(0.7),
+                            strokeWidth: 1.5,
+                            dashArray: [4, 4],
+                          ),
+                        ]),
+                        barGroups: List.generate(waterDays.length, (i) {
+                          final v =
+                              waterDays[i].totalMl / WaterLog.mlPerGlass;
+                          return BarChartGroupData(x: i, barRods: [
+                            BarChartRodData(
+                              toY: v,
+                              width: waterDays.length > 15 ? 6 : 14,
+                              borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(4)),
+                              gradient: LinearGradient(
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
+                                colors: [
+                                  AppColors.waterBlue,
+                                  AppColors.waterBlue.withOpacity(0.6),
+                                ],
+                              ),
+                            ),
+                          ]);
+                        }),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                          width: 12,
+                          height: 2,
+                          color: AppColors.success.withOpacity(0.7)),
+                      const SizedBox(width: 6),
+                      Text(
+                          'Goal (${(waterGoal / WaterLog.mlPerGlass).toStringAsFixed(0)} glasses)',
+                          style: TextStyle(fontFamily: 'Poppins',
+                              fontSize: 11, color: Colors.grey)),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),

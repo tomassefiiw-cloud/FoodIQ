@@ -17,6 +17,22 @@ final todayWaterSummaryProvider = FutureProvider<WaterSummary>((ref) async {
   return LogService.getDailyWaterSummary(user.id, DateTime.now());
 });
 
+// Weekly water summaries (last 7 days including today, oldest first)
+final weeklyWaterLogsProvider =
+    FutureProvider<List<WaterSummary>>((ref) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return [];
+  return LogService.getWaterSummariesForRange(user.id, 7);
+});
+
+// Monthly water summaries (last 30 days, oldest first)
+final monthlyWaterLogsProvider =
+    FutureProvider<List<WaterSummary>>((ref) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return [];
+  return LogService.getWaterSummariesForRange(user.id, 30);
+});
+
 // Water progress (0.0 to 1.0+)
 final waterProgressProvider = Provider<double>((ref) {
   final summaryAsync = ref.watch(todayWaterSummaryProvider);
