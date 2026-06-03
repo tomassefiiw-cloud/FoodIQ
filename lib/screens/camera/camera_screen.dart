@@ -121,23 +121,76 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                 child: const Icon(Icons.restaurant_menu, color: AppColors.primary, size: 32),
               ),
               const SizedBox(height: 16),
+              // Prominent "AI recognized" banner so the user can clearly see
+              // WHICH meal the AI detected (and confirm it's right) before
+              // choosing breakfast / lunch / dinner / snack.
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.10),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.35)),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.auto_awesome, color: AppColors.primary, size: 16),
+                        const SizedBox(width: 6),
+                        Text(
+                          'AI recognized this as',
+                          style: TextStyle(fontFamily: 'Poppins',
+                            fontSize: 12,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      result.foodName,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontFamily: 'Poppins',
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${(result.confidence * 100).toStringAsFixed(0)}% match • ${result.calories.toStringAsFixed(0)} kcal'
+                      '${result.isEthiopian ? ' • Ethiopian 🇪🇹' : ''}',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontFamily: 'Poppins',
+                        fontSize: 13,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Not right? Tap "Skip logging" below and retake the photo.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontFamily: 'Poppins',
+                  fontSize: 11,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 14),
               Text(
                 'Which meal is this?',
                 style: TextStyle(fontFamily: 'Poppins', 
-                  fontSize: 22,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                '${result.foodName} • ${result.calories.toStringAsFixed(0)} kcal',
-                style: TextStyle(fontFamily: 'Poppins', 
-                  fontSize: 15,
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 14),
               // Meal type options
               _MealTypeOption(
                 icon: '🌅',
@@ -463,6 +516,8 @@ class _MealTypeOption extends StatelessWidget {
                   children: [
                     Text(
                       label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -471,6 +526,8 @@ class _MealTypeOption extends StatelessWidget {
                     ),
                     Text(
                       subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 12,
                         color: Colors.grey,

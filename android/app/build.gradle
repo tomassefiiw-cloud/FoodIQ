@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.foodiq.foodiq"
-    compileSdk = 34
+    compileSdk = 35
 
     compileOptions {
         coreLibraryDesugaringEnabled = true
@@ -22,7 +22,7 @@ android {
     defaultConfig {
         applicationId = "com.foodiq.foodiq"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

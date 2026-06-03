@@ -11,7 +11,7 @@ class AppConfig {
 
   // App Info
   static const String appName = 'FoodIQ';
-  static const String appVersion = '1.6.0';
+  static const String appVersion = '1.7.0';
   static const String appTagline = 'Smart Ethiopian Calorie Tracking with AI';
 
   // Default Goals

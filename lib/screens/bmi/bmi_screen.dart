@@ -12,6 +12,7 @@ import '../../core/constants/food_database.dart';
 import '../../models/food_item.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/log_service.dart';
+import '../../services/notification_service.dart';
 
 class BMIScreen extends ConsumerStatefulWidget {
   const BMIScreen({super.key});
@@ -153,6 +154,14 @@ class _BMIScreenState extends ConsumerState<BMIScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('user_bmi', bmi);
     print('[BMI] Saved BMI ${bmi.toStringAsFixed(1)} to prefs for notifications');
+
+    // Re-schedule reminders so they immediately start using the new BMI for
+    // personalized, funny meal suggestions. No-op if reminders are disabled.
+    try {
+      await NotificationService.rescheduleFromPrefs();
+    } catch (e) {
+      print('[BMI] reschedule after BMI save failed: $e');
+    }
   }
 
   /// Suggest meals from the local database based on BMI

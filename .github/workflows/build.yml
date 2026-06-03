@@ -10,27 +10,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-      
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.44.1'
+          flutter-version: '3.24.0'
           channel: 'stable'
-      
+
       - name: Install dependencies
         run: flutter pub get
-      
+
       - name: Build APK
         run: flutter build apk --release --no-tree-shake-icons
-      
+
+      - name: Rename APK
+        run: cp build/app/outputs/flutter-apk/app-release.apk FoodIQ-v1.7.0.apk
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: FoodIQ-APK
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: FoodIQ-v1.7.0
+          path: FoodIQ-v1.7.0.apk
