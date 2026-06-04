@@ -12,8 +12,10 @@ class ApiKeys {
 
   // ----- AI keys (obfuscated) -----
   // Decoded at runtime — these are NOT plaintext.
+  // Gemini key updated (user-provided) — used for BOTH vision (food scan) and
+  // the text AI assistant. New key has higher free-tier quota & great Amharic.
   static const String _geminiObf =
-      '030b3823113b032b7b0016322025101876071b006f373629133a703600041229150b07263a3235';
+      '03136c03207a100c740b2c3a2d0a29232032091b2d742d1b0c2530153436087005107b0f7a770f370714050c251a23330b18372313';
   static const String _groqObf =
       '2531291d2a0816722c2f0b2f2020722108210e2f06107b0b1505263b2071041b302e702b772d710732721b070a7601332a2a72727536200f';
 

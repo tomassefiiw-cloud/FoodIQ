@@ -18,8 +18,11 @@ class ChatResult {
 
 class AIService {
   // ==========================================================================
-  // GROQ — AI Nutrition Assistant
+  // GEMINI — AI Nutrition Assistant (text)
   // ==========================================================================
+  // The text assistant runs on Gemini so it works reliably and speaks fluent
+  // Amharic. It auto-detects Amharic input and replies in Amharic, and falls
+  // back through a chain of models on quota (429) errors.
   static Future<String> chatWithAssistant({
     required String userMessage,
     required double currentCalories,
@@ -35,13 +38,29 @@ class AIService {
     return r.reply;
   }
 
+  /// True if the text contains Ethiopic (Amharic) script characters.
+  static bool _containsAmharic(String text) {
+    // Ethiopic Unicode block: U+1200–U+137F (plus supplements U+1380–U+139F).
+    return RegExp(r'[\u1200-\u139F]').hasMatch(text);
+  }
+
   static Future<ChatResult> chatWithAssistantFull({
     required String userMessage,
     required double currentCalories,
     required double currentWaterMl,
     required int calorieGoal,
   }) async {
-    final systemPrompt = '''You are FoodIQ AI, a knowledgeable and friendly nutrition assistant specializing in Ethiopian cuisine.
+    final isAmharic = _containsAmharic(userMessage);
+
+    final languageRule = isAmharic
+        ? '- The user wrote in Amharic (አማርኛ). You MUST reply ENTIRELY in clear, '
+            'natural Amharic.'
+        : '- Reply in the same language the user used. If they write in Amharic '
+            '(አማርኛ), reply fully in Amharic; otherwise reply in English. You are '
+            'fully fluent in Amharic.';
+
+    final systemPrompt =
+        '''You are FoodIQ AI, a knowledgeable and friendly nutrition assistant specializing in Ethiopian cuisine. You are fully bilingual in English and Amharic (አማርኛ).
 
 Current user context:
 - Calories consumed today: ${currentCalories.toStringAsFixed(0)} / $calorieGoal kcal
@@ -54,64 +73,115 @@ Guidelines:
 - Suggest practical meal plans incorporating traditional foods.
 - Keep responses concise (under 200 words).
 - If user asks about specific foods, mention calorie and macro info.
-- Support both English and Amharic food names.''';
+$languageRule
+- Use both English and Amharic food names when helpful.''';
 
-    try {
-      final response = await http
-          .post(
-            Uri.parse('https://api.groq.com/openai/v1/chat/completions'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ${AppConfig.groqApiKey}',
-            },
-            body: jsonEncode({
-              'model': AppConfig.groqChatModel,
-              'messages': [
-                {'role': 'system', 'content': systemPrompt},
-                {'role': 'user', 'content': userMessage},
-              ],
-              'max_tokens': 1024,
-              'temperature': 0.7,
-            }),
-          )
-          .timeout(const Duration(seconds: 30));
+    String? lastError;
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final reply = (data['choices']?[0]?['message']?['content'] as String?)
-                ?.trim() ??
-            "I couldn't generate a response. Please try again.";
-        return ChatResult(reply: reply, wasOffline: false);
-      } else {
+    for (final model in AppConfig.geminiChatFallbacks) {
+      try {
+        final url = Uri.parse(
+          'https://generativelanguage.googleapis.com/v1beta/models/'
+          '$model:generateContent?key=${AppConfig.geminiApiKey}',
+        );
+
+        final response = await http
+            .post(
+              url,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({
+                'systemInstruction': {
+                  'parts': [
+                    {'text': systemPrompt}
+                  ]
+                },
+                'contents': [
+                  {
+                    'role': 'user',
+                    'parts': [
+                      {'text': userMessage}
+                    ]
+                  }
+                ],
+                'generationConfig': {
+                  'temperature': 0.7,
+                  'maxOutputTokens': 1024,
+                },
+              }),
+            )
+            .timeout(const Duration(seconds: 30));
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body) as Map<String, dynamic>;
+          final candidates = data['candidates'] as List?;
+          if (candidates == null || candidates.isEmpty) {
+            lastError = 'No candidates returned';
+            continue;
+          }
+          final parts =
+              (candidates[0]?['content']?['parts'] as List?) ?? const [];
+          final reply = parts
+              .map((p) => (p is Map && p['text'] != null) ? p['text'] : '')
+              .join('')
+              .toString()
+              .trim();
+
+          if (reply.isEmpty) {
+            final finish = candidates[0]?['finishReason']?.toString() ?? '';
+            lastError = 'Empty reply${finish.isNotEmpty ? ' ($finish)' : ''}';
+            continue;
+          }
+          return ChatResult(reply: reply, wasOffline: false);
+        }
+
+        // Non-200 — decide whether to try the next model.
         // ignore: avoid_print
-        print('[Groq] HTTP ${response.statusCode}: ${response.body}');
+        print('[Gemini/$model] HTTP ${response.statusCode}: ${response.body}');
+        final body = response.body.toLowerCase();
+        final isQuota = response.statusCode == 429 ||
+            response.statusCode == 503 ||
+            response.statusCode == 404 ||
+            body.contains('quota') ||
+            body.contains('rate') ||
+            body.contains('unavailable') ||
+            body.contains('not found');
+        lastError = 'HTTP ${response.statusCode}';
+        if (isQuota) {
+          // Try next model in the fallback chain.
+          continue;
+        }
+        // Hard error — stop and use offline fallback.
+        break;
+      } on SocketException catch (e) {
         return ChatResult(
           reply: _getOfflineResponse(userMessage),
           wasOffline: true,
-          error: 'Server returned ${response.statusCode}',
+          error: 'No internet: ${e.message}',
         );
+      } catch (e) {
+        // ignore: avoid_print
+        print('[Gemini/$model] exception: $e');
+        lastError = e.toString();
+        continue;
       }
-    } on SocketException catch (e) {
-      return ChatResult(
-        reply: _getOfflineResponse(userMessage),
-        wasOffline: true,
-        error: 'No internet: ${e.message}',
-      );
-    } catch (e) {
-      // ignore: avoid_print
-      print('[Groq] exception: $e');
-      return ChatResult(
-        reply: _getOfflineResponse(userMessage),
-        wasOffline: true,
-        error: e.toString(),
-      );
     }
+
+    return ChatResult(
+      reply: _getOfflineResponse(userMessage),
+      wasOffline: true,
+      error: lastError ?? 'AI unavailable',
+    );
   }
 
   // ==========================================================================
   // OFFLINE FALLBACK
   // ==========================================================================
   static String _getOfflineResponse(String query) {
+    // If the user wrote in Amharic, reply offline in Amharic too.
+    if (_containsAmharic(query)) {
+      return 'ይቅርታ፣ አሁን ከበይነ መረብ ጋር መገናኘት አልቻልኩም። እባክዎ ትንሽ ቆይተው እንደገና ይሞክሩ። '
+          'ስለ ኢትዮጵያ ምግቦች፣ ካሎሪ፣ ውሃ ወይም የምግብ እቅድ መጠየቅ ይችላሉ። 🇪🇹';
+    }
     final q = query.toLowerCase();
     if (q.contains('hello') || q.contains('hi') || q.contains('hey') ||
         q.contains('selam')) {

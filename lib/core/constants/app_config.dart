@@ -11,7 +11,7 @@ class AppConfig {
 
   // App Info
   static const String appName = 'FoodIQ';
-  static const String appVersion = '1.8.0';
+  static const String appVersion = '1.9.0';
   static const String appTagline = 'Smart Ethiopian Calorie Tracking with AI';
 
   // Default Goals
@@ -25,6 +25,23 @@ class AppConfig {
 
   // AI Models
   static const String groqChatModel = 'llama-3.3-70b-versatile';
+
+  /// Gemini text/chat model for the AI Assistant.
+  ///
+  /// The AI Assistant now runs on Gemini (instead of Groq) so it works
+  /// reliably and speaks fluent Amharic. The *-lite variant has the highest
+  /// free-tier quota (high RPM/RPD), with a fallback chain below.
+  static const String geminiChatModel = 'gemini-2.5-flash-lite';
+
+  /// Fallback chain for the text assistant — tried in order on 429/quota
+  /// errors. Highest free-tier quota first.
+  static const List<String> geminiChatFallbacks = [
+    'gemini-2.5-flash-lite',
+    'gemini-flash-lite-latest',
+    'gemini-2.0-flash-lite',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+  ];
 
   /// Primary Gemini vision model — the *-lite variants have much higher
   /// free-tier quotas (30 RPM, 1,500 RPD) compared to flash (15 RPM, 200 RPD).

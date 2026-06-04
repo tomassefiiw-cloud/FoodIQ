@@ -55,6 +55,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Register a new account.
+  ///
+  /// Per product flow: after a successful sign-up we DO NOT auto-enter the app.
+  /// Instead we sign the user out (if a session was created) and keep them
+  /// unauthenticated, so the Register screen can redirect them to the Login
+  /// page. They then log in with the same credentials and land on Home.
   Future<void> register(String name, String email, String password,
       {int calorieGoal = 2000}) async {
     final user = await AuthService.register(
@@ -63,11 +69,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
       password: password,
       calorieGoal: calorieGoal,
     );
-    if (user != null) {
-      state = AuthAuthenticated(user);
-    } else {
+    if (user == null) {
       throw Exception('Registration failed');
     }
+    // Ensure the account & profile are created, but don't keep the session —
+    // the user must sign in from the Login page.
+    try {
+      await AuthService.logout();
+    } catch (_) {/* ignore */}
+    state = const AuthUnauthenticated();
   }
 
   Future<void> logout() async {

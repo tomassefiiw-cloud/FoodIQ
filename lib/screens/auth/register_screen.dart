@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/auth_service.dart';
+import 'login_screen.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -41,23 +42,30 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     setState(() { _isLoading = true; _error = null; _success = null; });
 
+    final email = _emailController.text.trim();
+
     try {
       await ref.read(authProvider.notifier).register(
         _nameController.text.trim(),
-        _emailController.text.trim(),
+        email,
         _passwordController.text,
         calorieGoal: _calorieGoal.toInt(),
       );
-      // Registration successful - the auth state change will navigate away
+      // Registration succeeded. Per the desired flow, send the user to the
+      // Login page so they can sign in and then reach Home.
+      if (!mounted) return;
+      _goToLogin(
+        email: email,
+        message: 'Account created! Please sign in to continue.',
+      );
     } catch (e) {
       final errorMsg = e.toString().replaceFirst('Exception: ', '');
-      
-      // Check if the error is actually a success message (email confirmation)
+
+      // Some Supabase configs require email confirmation — still send the user
+      // to the Login page with a helpful note.
       if (errorMsg.contains('Registration successful')) {
-        setState(() {
-          _success = errorMsg;
-          _isLoading = false;
-        });
+        if (!mounted) return;
+        _goToLogin(email: email, message: errorMsg);
       } else {
         setState(() {
           _error = errorMsg;
@@ -65,6 +73,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         });
       }
     }
+  }
+
+  /// Redirect to the Login page, pre-filling the email and showing a message.
+  void _goToLogin({required String email, required String message}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(fontFamily: 'Poppins')),
+        backgroundColor: AppColors.success,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+    // Replace this screen with the Login screen so back doesn't return here.
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => LoginScreen(initialEmail: email)),
+    );
   }
 
   @override
