@@ -317,7 +317,15 @@ $languageRule
             'parts': [
               {
                 'text':
-                    '''Analyze this food image and identify the primary food shown.
+                    '''You are a precise nutrition vision model. Analyze this food image and identify the primary food shown.
+
+IMPORTANT — portion & calories:
+- Carefully ESTIMATE the actual portion size visible in grams (serving_size_g),
+  using visual cues like the plate size, utensils, and how full the plate is.
+- The calories, protein, carbs, fat and fiber values MUST correspond to that
+  estimated portion (the whole serving shown), NOT per 100g.
+- Be as accurate and realistic as possible for the amount of food visible.
+
 Return ONLY a JSON object (no markdown, no commentary) with this exact schema:
 
 {

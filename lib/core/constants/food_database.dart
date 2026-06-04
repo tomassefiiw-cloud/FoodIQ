@@ -27,19 +27,19 @@ class EthiopianFoods {
     FoodItem(id: 'et_020', name: 'Duba Wot', nameAmharic: 'ዱባ ወጥ', calories: 120, protein: 4.0, carbs: 18, fat: 4.5, fiber: 3.0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Pumpkin stew'),
     FoodItem(id: 'et_021', name: 'Atkilt Wot', nameAmharic: 'አትክልት ወጥ', calories: 105, protein: 3.5, carbs: 16, fat: 3.5, fiber: 4.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Mixed vegetable stew'),
     FoodItem(id: 'et_022', name: 'Kik Wot', nameAmharic: 'ክክ ወጥ', calories: 175, protein: 11, carbs: 26, fat: 3.0, fiber: 7.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Split pea stew'),
-    FoodItem(id: 'et_023', name: 'Gomen', nameAmharic: 'ጎሜን', calories: 85, protein: 4.5, carbs: 8, fat: 4.5, fiber: 5.0, servingSize: 150, category: FoodCategory.ethiopian, description: 'Collard greens with spices'),
+    FoodItem(id: 'et_023', name: 'Gomen', nameAmharic: 'ጎመን', calories: 85, protein: 4.5, carbs: 8, fat: 4.5, fiber: 5.0, servingSize: 150, category: FoodCategory.ethiopian, description: 'Collard greens with spices'),
     FoodItem(id: 'et_024', name: 'Fasolia', nameAmharic: 'ፋሶሊያ', calories: 110, protein: 5.0, carbs: 15, fat: 3.5, fiber: 4.0, servingSize: 150, category: FoodCategory.ethiopian, description: 'Green beans and carrots stew'),
     FoodItem(id: 'et_025', name: 'Shiro Alicha', nameAmharic: 'ሽሮ አሊጫ', calories: 170, protein: 9.0, carbs: 20, fat: 6.0, fiber: 5.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Mild chickpea flour stew'),
-    FoodItem(id: 'et_026', name: 'Yatakilt Alicha', nameAmharic: 'ያታክልት አሊጫ', calories: 95, protein: 3.0, carbs: 14, fat: 3.0, fiber: 3.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Mild mixed vegetable stew'),
+    FoodItem(id: 'et_026', name: 'Yatakilt Alicha', nameAmharic: 'የአትክልት አሊጫ', calories: 95, protein: 3.0, carbs: 14, fat: 3.0, fiber: 3.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Mild mixed vegetable stew'),
     FoodItem(id: 'et_027', name: 'Doro Alicha', nameAmharic: 'ዶሮ አሊጫ', calories: 210, protein: 20, carbs: 7, fat: 12, fiber: 1.0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Mild chicken stew'),
     FoodItem(id: 'et_028', name: 'Kai Seg Wot', nameAmharic: 'ቀይ ስጋ ወጥ', calories: 245, protein: 20, carbs: 9, fat: 16, fiber: 1.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Spicy beef stew'),
     FoodItem(id: 'et_029', name: 'Yebeg Wot', nameAmharic: 'የበግ ወጥ', calories: 270, protein: 19, carbs: 8, fat: 20, fiber: 1.0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Spicy lamb stew'),
     FoodItem(id: 'et_030', name: 'Dinch Wot', nameAmharic: 'ዲንች ወጥ', calories: 130, protein: 3.5, carbs: 22, fat: 3.5, fiber: 3.0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Potato stew'),
     FoodItem(id: 'et_031', name: 'Karot Wot', nameAmharic: 'ካሮት ወጥ', calories: 100, protein: 2.5, carbs: 16, fat: 3.0, fiber: 4.0, servingSize: 150, category: FoodCategory.ethiopian, description: 'Carrot stew'),
-    FoodItem(id: 'et_032', name: 'Tikil Gomen', nameAmharic: 'ጥቅል ጎሜን', calories: 75, protein: 3.0, carbs: 10, fat: 2.5, fiber: 4.5, servingSize: 150, category: FoodCategory.ethiopian, description: 'Cabbage with turmeric'),
+    FoodItem(id: 'et_032', name: 'Tikil Gomen', nameAmharic: 'ጥቅል ጎመን', calories: 75, protein: 3.0, carbs: 10, fat: 2.5, fiber: 4.5, servingSize: 150, category: FoodCategory.ethiopian, description: 'Cabbage with turmeric'),
     FoodItem(id: 'et_033', name: 'Shiro Beg Wot', nameAmharic: 'ሽሮ በግ ወጥ', calories: 215, protein: 15, carbs: 14, fat: 11, fiber: 4.0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Chickpea stew with lamb'),
-    FoodItem(id: 'et_034', name: 'Yetsom Beyaynetu', nameAmharic: 'የጾም በየይነቱ', calories: 350, protein: 14, carbs: 48, fat: 12, fiber: 10, servingSize: 400, category: FoodCategory.ethiopian, description: 'Fasting platter - mix of vegetable dishes'),
-    FoodItem(id: 'et_035', name: 'Quanta Wot', nameAmharic: 'ቋንቋ ወጥ', calories: 290, protein: 28, carbs: 10, fat: 16, fiber: 1.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Spicy dried meat stew'),
+    FoodItem(id: 'et_034', name: 'Yetsom Beyaynetu', nameAmharic: 'የጾም በያይነቱ', calories: 350, protein: 14, carbs: 48, fat: 12, fiber: 10, servingSize: 400, category: FoodCategory.ethiopian, description: 'Fasting platter - mix of vegetable dishes'),
+    FoodItem(id: 'et_035', name: 'Quanta Wot', nameAmharic: 'ቋንጣ ወጥ', calories: 290, protein: 28, carbs: 10, fat: 16, fiber: 1.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Spicy dried meat stew'),
 
     // ===== RAW MEAT DISHES (et_036 - et_043) =====
     FoodItem(id: 'et_036', name: 'Kitfo', nameAmharic: 'ክትፎ', calories: 320, protein: 28, carbs: 2, fat: 23, fiber: 0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Minced raw beef with mitmita spice'),
@@ -47,17 +47,17 @@ class EthiopianFoods {
     FoodItem(id: 'et_038', name: 'Tire Siga', nameAmharic: 'ጥሬ ስጋ', calories: 280, protein: 25, carbs: 0, fat: 20, fiber: 0, servingSize: 150, category: FoodCategory.ethiopian, description: 'Raw beef chunks'),
     FoodItem(id: 'et_039', name: 'Kitfo Leb Leb', nameAmharic: 'ክትፎ ለብ ለብ', calories: 310, protein: 27, carbs: 3, fat: 22, fiber: 0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Slightly warmed kitfo'),
     FoodItem(id: 'et_040', name: 'Kurt', nameAmharic: 'ኩርት', calories: 260, protein: 24, carbs: 0, fat: 18, fiber: 0, servingSize: 150, category: FoodCategory.ethiopian, description: 'Raw beef dipped in sauce'),
-    FoodItem(id: 'et_041', name: 'Quanta', nameAmharic: 'ቋንቋ', calories: 250, protein: 32, carbs: 5, fat: 12, fiber: 0, servingSize: 100, category: FoodCategory.ethiopian, description: 'Dried spiced meat'),
-    FoodItem(id: 'et_042', name: 'Quanta Firfir', nameAmharic: 'ቋንቋ ፍርፍር', calories: 310, protein: 22, carbs: 28, fat: 13, fiber: 2.5, servingSize: 250, category: FoodCategory.ethiopian, description: 'Dried meat with shredded injera'),
+    FoodItem(id: 'et_041', name: 'Quanta', nameAmharic: 'ቋንጣ', calories: 250, protein: 32, carbs: 5, fat: 12, fiber: 0, servingSize: 100, category: FoodCategory.ethiopian, description: 'Dried spiced meat'),
+    FoodItem(id: 'et_042', name: 'Quanta Firfir', nameAmharic: 'ቋንጣ ፍርፍር', calories: 310, protein: 22, carbs: 28, fat: 13, fiber: 2.5, servingSize: 250, category: FoodCategory.ethiopian, description: 'Dried meat with shredded injera'),
     FoodItem(id: 'et_043', name: 'Dereq Tibs', nameAmharic: 'ደረቅ ጥብስ', calories: 275, protein: 23, carbs: 5, fat: 19, fiber: 0.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Dry sauteed meat'),
 
     // ===== VEGETABLE DISHES (et_044 - et_053) =====
-    FoodItem(id: 'et_044', name: 'Gomen Besiga', nameAmharic: 'ጎሜን በስጋ', calories: 160, protein: 12, carbs: 8, fat: 9, fiber: 4.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Collard greens with meat'),
+    FoodItem(id: 'et_044', name: 'Gomen Besiga', nameAmharic: 'ጎመን በስጋ', calories: 160, protein: 12, carbs: 8, fat: 9, fiber: 4.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Collard greens with meat'),
     FoodItem(id: 'et_045', name: 'Misir Alicha', nameAmharic: 'ምስር አሊጫ', calories: 155, protein: 10, carbs: 22, fat: 3.0, fiber: 7.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Mild yellow lentil stew'),
     FoodItem(id: 'et_046', name: 'Kik Alicha', nameAmharic: 'ክክ አሊጫ', calories: 150, protein: 9.5, carbs: 24, fat: 2.5, fiber: 7.0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Mild split pea stew'),
-    FoodItem(id: 'et_047', name: 'Sik Sik', nameAmharic: 'ስስቅ', calories: 190, protein: 15, carbs: 10, fat: 10, fiber: 3.0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Mixed vegetable and grain dish'),
-    FoodItem(id: 'et_048', name: 'Tmhim', nameAmharic: 'ጥምህም', calories: 95, protein: 3.0, carbs: 14, fat: 3.0, fiber: 4.0, servingSize: 150, category: FoodCategory.ethiopian, description: 'Spiced vegetable dish'),
-    FoodItem(id: 'et_049', name: 'Ater Kik', nameAmharic: 'አጠር ክክ', calories: 160, protein: 10, carbs: 25, fat: 2.5, fiber: 6.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Chickpea stew'),
+    FoodItem(id: 'et_047', name: 'Sik Sik', nameAmharic: 'ሲክ ሲክ', calories: 190, protein: 15, carbs: 10, fat: 10, fiber: 3.0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Mixed vegetable and grain dish'),
+    FoodItem(id: 'et_048', name: 'Timatim Salata', nameAmharic: 'ቲማቲም ሰላጣ', calories: 95, protein: 3.0, carbs: 14, fat: 3.0, fiber: 4.0, servingSize: 150, category: FoodCategory.ethiopian, description: 'Spiced vegetable dish'),
+    FoodItem(id: 'et_049', name: 'Ater Kik', nameAmharic: 'አተር ክክ', calories: 160, protein: 10, carbs: 25, fat: 2.5, fiber: 6.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Chickpea stew'),
     FoodItem(id: 'et_050', name: 'Hilibit', nameAmharic: 'ሂሊቢት', calories: 140, protein: 5.0, carbs: 20, fat: 4.0, fiber: 5.0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Ethiopian vegetable medley'),
     FoodItem(id: 'et_051', name: 'Zigni', nameAmharic: 'ዚግኒ', calories: 200, protein: 15, carbs: 12, fat: 10, fiber: 2.0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Spicy meat and vegetable stew'),
     FoodItem(id: 'et_052', name: 'Birsen', nameAmharic: 'ብርሰን', calories: 85, protein: 4.0, carbs: 12, fat: 2.5, fiber: 4.0, servingSize: 150, category: FoodCategory.ethiopian, description: 'Green vegetable stew'),
@@ -68,11 +68,11 @@ class EthiopianFoods {
     FoodItem(id: 'et_055', name: 'Sambusa', nameAmharic: 'ሳምቡሳ', calories: 210, protein: 6.0, carbs: 24, fat: 10, fiber: 2.0, servingSize: 80, category: FoodCategory.ethiopian, description: 'Ethiopian samosa with lentil filling'),
     FoodItem(id: 'et_056', name: 'Dabbo Kolo', nameAmharic: 'ዳቦ ቆሎ', calories: 420, protein: 10, carbs: 62, fat: 16, fiber: 2.5, servingSize: 100, category: FoodCategory.ethiopian, description: 'Fried bread snack'),
     FoodItem(id: 'et_057', name: 'Nifro', nameAmharic: 'ንፍሮ', calories: 175, protein: 6.5, carbs: 32, fat: 2.0, fiber: 5.0, servingSize: 150, category: FoodCategory.ethiopian, description: 'Boiled wheat and barley mix'),
-    FoodItem(id: 'et_058', name: 'Ashuk', nameAmharic: 'አሹክ', calories: 160, protein: 8.0, carbs: 28, fat: 2.0, fiber: 5.5, servingSize: 150, category: FoodCategory.ethiopian, description: 'Roasted chickpeas'),
-    FoodItem(id: 'et_059', name: 'Chickpea Flour Snack', nameAmharic: 'ሽሮ ስንቅ', calories: 185, protein: 9.0, carbs: 25, fat: 6.0, fiber: 4.0, servingSize: 100, category: FoodCategory.ethiopian, description: 'Roasted chickpea flour balls'),
+    FoodItem(id: 'et_058', name: 'Roasted Chickpeas', nameAmharic: 'የተጠበሰ ሽምብራ', calories: 160, protein: 8.0, carbs: 28, fat: 2.0, fiber: 5.5, servingSize: 150, category: FoodCategory.ethiopian, description: 'Roasted chickpeas'),
+    FoodItem(id: 'et_059', name: 'Shimbra Kolo', nameAmharic: 'የሽምብራ ቆሎ', calories: 185, protein: 9.0, carbs: 25, fat: 6.0, fiber: 4.0, servingSize: 100, category: FoodCategory.ethiopian, description: 'Roasted chickpea flour balls'),
     FoodItem(id: 'et_060', name: 'Tihini', nameAmharic: 'ጥሂኒ', calories: 200, protein: 7.0, carbs: 28, fat: 7.5, fiber: 3.0, servingSize: 100, category: FoodCategory.ethiopian, description: 'Sesame-based snack'),
     FoodItem(id: 'et_061', name: 'Baklava', nameAmharic: 'ባክላቫ', calories: 350, protein: 5.0, carbs: 42, fat: 18, fiber: 1.5, servingSize: 80, category: FoodCategory.ethiopian, description: 'Sweet pastry with nuts and honey'),
-    FoodItem(id: 'et_062', name: 'Kita with Honey', nameAmharic: 'ቂጣ ከማር', calories: 280, protein: 6.0, carbs: 48, fat: 8.0, fiber: 1.5, servingSize: 100, category: FoodCategory.ethiopian, description: 'Flatbread with honey'),
+    FoodItem(id: 'et_062', name: 'Kita with Honey', nameAmharic: 'ቂጣ በማር', calories: 280, protein: 6.0, carbs: 48, fat: 8.0, fiber: 1.5, servingSize: 100, category: FoodCategory.ethiopian, description: 'Flatbread with honey'),
     FoodItem(id: 'et_063', name: 'Fendisha', nameAmharic: 'ፈንዲሻ', calories: 230, protein: 5.5, carbs: 40, fat: 6.0, fiber: 2.0, servingSize: 100, category: FoodCategory.ethiopian, description: 'Corn snack'),
 
     // ===== BEVERAGES (et_064 - et_075) =====
@@ -91,13 +91,13 @@ class EthiopianFoods {
 
     // ===== COMBO MEALS (et_076 - et_083) =====
     FoodItem(id: 'et_076', name: 'Injera + Doro Wot', nameAmharic: 'እንጀራ ዶሮ ወጥ', calories: 360, protein: 26, carbs: 31, fat: 16, fiber: 4.5, servingSize: 300, category: FoodCategory.ethiopian, description: 'Injera with spicy chicken stew'),
-    FoodItem(id: 'et_077', name: 'Full Bayenetu', nameAmharic: 'ፉል በየኔቱ', calories: 450, protein: 18, carbs: 55, fat: 17, fiber: 8.0, servingSize: 400, category: FoodCategory.ethiopian, description: 'Vegetarian combo platter'),
+    FoodItem(id: 'et_077', name: 'Full Bayenetu', nameAmharic: 'ፉል በያይነቱ', calories: 450, protein: 18, carbs: 55, fat: 17, fiber: 8.0, servingSize: 400, category: FoodCategory.ethiopian, description: 'Vegetarian combo platter'),
     FoodItem(id: 'et_078', name: 'Injera + Kitfo', nameAmharic: 'እንጀራ ክትፎ', calories: 430, protein: 32, carbs: 25, fat: 24, fiber: 3.0, servingSize: 300, category: FoodCategory.ethiopian, description: 'Injera with raw minced beef'),
     FoodItem(id: 'et_079', name: 'Injera + Shiro', nameAmharic: 'እንጀራ ሽሮ', calories: 305, protein: 14, carbs: 45, fat: 8.0, fiber: 9.0, servingSize: 300, category: FoodCategory.ethiopian, description: 'Injera with chickpea flour stew'),
     FoodItem(id: 'et_080', name: 'Injera + Tibs', nameAmharic: 'እንጀራ ጥብስ', calories: 380, protein: 24, carbs: 28, fat: 20, fiber: 3.0, servingSize: 300, category: FoodCategory.ethiopian, description: 'Injera with sautéed meat'),
     FoodItem(id: 'et_081', name: 'Injera + Misir', nameAmharic: 'እንጀራ ምስር', calories: 290, protein: 16, carbs: 47, fat: 5.0, fiber: 11, servingSize: 300, category: FoodCategory.ethiopian, description: 'Injera with lentil stew'),
-    FoodItem(id: 'et_082', name: 'Meat Beyaynetu', nameAmharic: 'ስጋ በየይነቱ', calories: 550, protein: 30, carbs: 50, fat: 25, fiber: 5.0, servingSize: 500, category: FoodCategory.ethiopian, description: 'Mixed meat platter with injera'),
-    FoodItem(id: 'et_083', name: 'Fasting Combo', nameAmharic: 'የጾም ድንበር', calories: 380, protein: 14, carbs: 52, fat: 13, fiber: 10, servingSize: 400, category: FoodCategory.ethiopian, description: 'Lentil and vegetable combo platter'),
+    FoodItem(id: 'et_082', name: 'Meat Beyaynetu', nameAmharic: 'ስጋ በያይነቱ', calories: 550, protein: 30, carbs: 50, fat: 25, fiber: 5.0, servingSize: 500, category: FoodCategory.ethiopian, description: 'Mixed meat platter with injera'),
+    FoodItem(id: 'et_083', name: 'Fasting Combo', nameAmharic: 'የጾም ምግብ', calories: 380, protein: 14, carbs: 52, fat: 13, fiber: 10, servingSize: 400, category: FoodCategory.ethiopian, description: 'Lentil and vegetable combo platter'),
 
     // ===== SPICES & CONDIMENTS (et_084 - et_089) =====
     FoodItem(id: 'et_084', name: 'Berbere', nameAmharic: 'በርበሬ', calories: 35, protein: 1.5, carbs: 6, fat: 1.0, fiber: 2.5, servingSize: 15, category: FoodCategory.ethiopian, description: 'Hot pepper spice blend'),
@@ -109,7 +109,7 @@ class EthiopianFoods {
 
     // ===== BREAKFAST ITEMS (et_090 - et_097) =====
     FoodItem(id: 'et_090', name: 'Firfir', nameAmharic: 'ፍርፍር', calories: 280, protein: 8.0, carbs: 38, fat: 12, fiber: 3.0, servingSize: 250, category: FoodCategory.ethiopian, description: 'Shredded injera with spiced butter and berbere'),
-    FoodItem(id: 'et_091', name: 'Kinche', nameAmharic: 'ቂንጬ', calories: 170, protein: 5.5, carbs: 34, fat: 2.0, fiber: 3.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Cracked wheat porridge'),
+    FoodItem(id: 'et_091', name: 'Kinche', nameAmharic: 'ቅንጬ', calories: 170, protein: 5.5, carbs: 34, fat: 2.0, fiber: 3.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Cracked wheat porridge'),
     FoodItem(id: 'et_092', name: 'Ful', nameAmharic: 'ፉል', calories: 220, protein: 12, carbs: 28, fat: 7.0, fiber: 8.0, servingSize: 250, category: FoodCategory.ethiopian, description: 'Fava bean stew with spices'),
     FoodItem(id: 'et_093', name: 'Fatira', nameAmharic: 'ፋጥራ', calories: 350, protein: 12, carbs: 40, fat: 16, fiber: 2.0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Fried pastry with egg and honey'),
     FoodItem(id: 'et_094', name: 'Enkulal Firfir', nameAmharic: 'እንቁላል ፍርፍር', calories: 230, protein: 14, carbs: 20, fat: 11, fiber: 2.0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Scrambled eggs with shredded injera'),
@@ -122,8 +122,32 @@ class EthiopianFoods {
     FoodItem(id: 'et_099', name: 'Yebeg Tibs', nameAmharic: 'የበግ ጥብስ', calories: 275, protein: 20, carbs: 5, fat: 20, fiber: 0.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Sautéed lamb cubes'),
     FoodItem(id: 'et_100', name: 'Doro Tibs', nameAmharic: 'ዶሮ ጥብስ', calories: 230, protein: 24, carbs: 4, fat: 13, fiber: 0.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Sautéed chicken pieces'),
     FoodItem(id: 'et_101', name: 'Tibs Special', nameAmharic: 'ጥብስ ስፔሻል', calories: 300, protein: 23, carbs: 8, fat: 21, fiber: 1.0, servingSize: 250, category: FoodCategory.ethiopian, description: 'Premium sautéed meat with vegetables'),
-    FoodItem(id: 'et_102', name: 'Keysir Tibs', nameAmharic: 'ቀስር ጥብስ', calories: 150, protein: 3.0, carbs: 18, fat: 7.0, fiber: 3.0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Sautéed carrots with spices'),
+    FoodItem(id: 'et_102', name: 'Carrot Tibs', nameAmharic: 'ካሮት ጥብስ', calories: 150, protein: 3.0, carbs: 18, fat: 7.0, fiber: 3.0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Sautéed carrots with spices'),
     FoodItem(id: 'et_103', name: 'Kurt Siga', nameAmharic: 'ኩርት ስጋ', calories: 290, protein: 26, carbs: 2, fat: 21, fiber: 0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Chunky beef pieces with dipping sauce'),
+
+    // ===== ADDED FOODS (et_104 - et_125) — verified Amharic names =====
+    FoodItem(id: 'et_104', name: 'Beyaynetu', nameAmharic: 'በያይነቱ', calories: 400, protein: 16, carbs: 55, fat: 13, fiber: 11, servingSize: 450, category: FoodCategory.ethiopian, description: 'Mixed vegetarian combination platter on injera'),
+    FoodItem(id: 'et_105', name: 'Asa Wot', nameAmharic: 'ዓሳ ወጥ', calories: 190, protein: 21, carbs: 6, fat: 9, fiber: 1.0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Spicy fish stew'),
+    FoodItem(id: 'et_106', name: 'Asa Tibs', nameAmharic: 'ዓሳ ጥብስ', calories: 220, protein: 23, carbs: 5, fat: 12, fiber: 0.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Sautéed/fried fish pieces'),
+    FoodItem(id: 'et_107', name: 'Asa Gulash', nameAmharic: 'ዓሳ ጉላሽ', calories: 210, protein: 20, carbs: 9, fat: 11, fiber: 1.5, servingSize: 220, category: FoodCategory.ethiopian, description: 'Fish goulash with vegetables'),
+    FoodItem(id: 'et_108', name: 'Doro Wot with Egg', nameAmharic: 'ዶሮ ወጥ በእንቁላል', calories: 290, protein: 25, carbs: 8, fat: 18, fiber: 1.5, servingSize: 230, category: FoodCategory.ethiopian, description: 'Spicy chicken stew with boiled egg'),
+    FoodItem(id: 'et_109', name: 'Minchet Abish', nameAmharic: 'ምንጭት አብሽ', calories: 240, protein: 18, carbs: 9, fat: 16, fiber: 2.0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Spicy minced beef stew'),
+    FoodItem(id: 'et_110', name: 'Bozena Shiro', nameAmharic: 'ቦዘና ሽሮ', calories: 235, protein: 14, carbs: 20, fat: 11, fiber: 5.0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Chickpea flour stew with chopped meat'),
+    FoodItem(id: 'et_111', name: 'Tegabino Shiro', nameAmharic: 'ተጋቢኖ ሽሮ', calories: 210, protein: 11, carbs: 21, fat: 9, fiber: 6.0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Thick chickpea flour stew served sizzling'),
+    FoodItem(id: 'et_112', name: 'Azifa', nameAmharic: 'አዚፋ', calories: 160, protein: 9.0, carbs: 22, fat: 4.0, fiber: 7.0, servingSize: 180, category: FoodCategory.ethiopian, description: 'Cold green lentil salad with mustard'),
+    FoodItem(id: 'et_113', name: 'Buticha', nameAmharic: 'ቡጥቻ', calories: 180, protein: 8.0, carbs: 20, fat: 8.0, fiber: 5.0, servingSize: 180, category: FoodCategory.ethiopian, description: 'Chickpea flour paste salad (fasting)'),
+    FoodItem(id: 'et_114', name: 'Difo Dabo', nameAmharic: 'ድፎ ዳቦ', calories: 285, protein: 8.0, carbs: 50, fat: 6.5, fiber: 2.5, servingSize: 120, category: FoodCategory.ethiopian, description: 'Large traditional celebration bread'),
+    FoodItem(id: 'et_115', name: 'Qey Sega Tibs', nameAmharic: 'ቀይ ስጋ ጥብስ', calories: 270, protein: 23, carbs: 5, fat: 18, fiber: 0.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Sautéed beef in berbere'),
+    FoodItem(id: 'et_116', name: 'Shekla Tibs', nameAmharic: 'ሸክላ ጥብስ', calories: 300, protein: 24, carbs: 6, fat: 21, fiber: 1.0, servingSize: 250, category: FoodCategory.ethiopian, description: 'Sizzling meat served on a clay pot'),
+    FoodItem(id: 'et_117', name: 'Zilzil Tibs', nameAmharic: 'ዝልዝል ጥብስ', calories: 290, protein: 23, carbs: 5, fat: 20, fiber: 0.5, servingSize: 220, category: FoodCategory.ethiopian, description: 'Strips of beef sautéed with onion and rosemary'),
+    FoodItem(id: 'et_118', name: 'Yeshimbra Asa', nameAmharic: 'የሽምብራ ዓሳ', calories: 230, protein: 9.0, carbs: 30, fat: 9.0, fiber: 4.0, servingSize: 150, category: FoodCategory.ethiopian, description: 'Fish-shaped fried chickpea dough (fasting snack)'),
+    FoodItem(id: 'et_119', name: 'Enkulal be Tibs', nameAmharic: 'እንቁላል በጥብስ', calories: 250, protein: 16, carbs: 6, fat: 18, fiber: 1.0, servingSize: 200, category: FoodCategory.ethiopian, description: 'Eggs scrambled with sautéed meat'),
+    FoodItem(id: 'et_120', name: 'Dulet', nameAmharic: 'ዱለት', calories: 320, protein: 24, carbs: 4, fat: 24, fiber: 0.5, servingSize: 200, category: FoodCategory.ethiopian, description: 'Minced tripe, liver and lean meat with spices'),
+    FoodItem(id: 'et_121', name: 'Senig Karya', nameAmharic: 'ስኒግ ቃርያ', calories: 90, protein: 4.0, carbs: 8, fat: 5.0, fiber: 2.0, servingSize: 100, category: FoodCategory.ethiopian, description: 'Stuffed green jalapeño peppers'),
+    FoodItem(id: 'et_122', name: 'Kategna', nameAmharic: 'ቃጠኛ', calories: 210, protein: 5.0, carbs: 30, fat: 8.0, fiber: 2.0, servingSize: 120, category: FoodCategory.ethiopian, description: 'Toasted injera brushed with berbere and butter'),
+    FoodItem(id: 'et_123', name: 'Ergo', nameAmharic: 'እርጎ', calories: 70, protein: 4.0, carbs: 6, fat: 3.5, fiber: 0, servingSize: 150, category: FoodCategory.ethiopian, description: 'Ethiopian plain yogurt'),
+    FoodItem(id: 'et_124', name: 'Ayib', nameAmharic: 'አይብ', calories: 98, protein: 11, carbs: 3.0, fat: 4.5, fiber: 0, servingSize: 100, category: FoodCategory.ethiopian, description: 'Ethiopian fresh cottage cheese'),
+    FoodItem(id: 'et_125', name: 'Gomen be Ayib', nameAmharic: 'ጎመን በአይብ', calories: 130, protein: 8.0, carbs: 8, fat: 8.0, fiber: 4.0, servingSize: 180, category: FoodCategory.ethiopian, description: 'Collard greens with fresh cheese'),
   ];
 }
 
@@ -226,6 +250,24 @@ class CommonFoods {
     FoodItem(id: 'cm_078', name: 'French Fries', calories: 312, protein: 3.4, carbs: 41, fat: 15, fiber: 3.8, servingSize: 100, category: FoodCategory.common, description: 'Deep-fried potato fries'),
     FoodItem(id: 'cm_079', name: 'Hamburger', calories: 295, protein: 17, carbs: 24, fat: 14, fiber: 1.3, servingSize: 100, category: FoodCategory.common, description: 'Beef hamburger'),
     FoodItem(id: 'cm_080', name: 'Fried Chicken', calories: 246, protein: 19, carbs: 10, fat: 15, fiber: 0.5, servingSize: 100, category: FoodCategory.common, description: 'Fried chicken pieces'),
+
+    // ===== ADDED COMMON FOODS (cm_081 - cm_096) — with Amharic names =====
+    FoodItem(id: 'cm_081', name: 'Spaghetti', nameAmharic: 'ስፓጌቲ', calories: 158, protein: 6.0, carbs: 31, fat: 1.5, fiber: 1.8, servingSize: 150, category: FoodCategory.common, description: 'Cooked spaghetti with light sauce'),
+    FoodItem(id: 'cm_082', name: 'Macaroni', nameAmharic: 'መካሮኒ', calories: 165, protein: 6.0, carbs: 32, fat: 1.5, fiber: 1.8, servingSize: 150, category: FoodCategory.common, description: 'Cooked macaroni'),
+    FoodItem(id: 'cm_083', name: 'Boiled Potato', nameAmharic: 'የተቀቀለ ድንች', calories: 87, protein: 1.9, carbs: 20, fat: 0.1, fiber: 1.8, servingSize: 100, category: FoodCategory.common, description: 'Boiled potato'),
+    FoodItem(id: 'cm_084', name: 'Boiled Egg (2)', nameAmharic: 'የተቀቀለ እንቁላል', calories: 155, protein: 13, carbs: 1.1, fat: 11, fiber: 0, servingSize: 100, category: FoodCategory.common, description: 'Two boiled eggs'),
+    FoodItem(id: 'cm_085', name: 'Lentil Soup', nameAmharic: 'የምስር ሾርባ', calories: 90, protein: 6.0, carbs: 14, fat: 1.0, fiber: 5.0, servingSize: 200, category: FoodCategory.common, description: 'Light lentil soup'),
+    FoodItem(id: 'cm_086', name: 'Vegetable Salad', nameAmharic: 'የአትክልት ሰላጣ', calories: 60, protein: 2.0, carbs: 8, fat: 2.5, fiber: 2.5, servingSize: 150, category: FoodCategory.common, description: 'Mixed fresh vegetable salad'),
+    FoodItem(id: 'cm_087', name: 'Potato Chips (Crisps)', nameAmharic: 'ድንች ቺፕስ', calories: 536, protein: 7.0, carbs: 53, fat: 35, fiber: 4.0, servingSize: 100, category: FoodCategory.common, description: 'Fried potato crisps'),
+    FoodItem(id: 'cm_088', name: 'Honey', nameAmharic: 'ማር', calories: 304, protein: 0.3, carbs: 82, fat: 0, fiber: 0.2, servingSize: 100, category: FoodCategory.common, description: 'Pure honey'),
+    FoodItem(id: 'cm_089', name: 'Yogurt', nameAmharic: 'እርጎ', calories: 61, protein: 3.5, carbs: 4.7, fat: 3.3, fiber: 0, servingSize: 100, category: FoodCategory.common, description: 'Plain yogurt'),
+    FoodItem(id: 'cm_090', name: 'Pumpkin', nameAmharic: 'ዱባ', calories: 26, protein: 1.0, carbs: 6.5, fat: 0.1, fiber: 0.5, servingSize: 100, category: FoodCategory.common, description: 'Cooked pumpkin'),
+    FoodItem(id: 'cm_091', name: 'Cabbage', nameAmharic: 'ጥቅል ጎመን', calories: 25, protein: 1.3, carbs: 5.8, fat: 0.1, fiber: 2.5, servingSize: 100, category: FoodCategory.common, description: 'Raw cabbage'),
+    FoodItem(id: 'cm_092', name: 'Beetroot', nameAmharic: 'ቀይ ስር', calories: 43, protein: 1.6, carbs: 10, fat: 0.2, fiber: 2.8, servingSize: 100, category: FoodCategory.common, description: 'Cooked beetroot'),
+    FoodItem(id: 'cm_093', name: 'Lemon', nameAmharic: 'ሎሚ', calories: 29, protein: 1.1, carbs: 9.3, fat: 0.3, fiber: 2.8, servingSize: 100, category: FoodCategory.common, description: 'Fresh lemon'),
+    FoodItem(id: 'cm_094', name: 'Guava', nameAmharic: 'ዘይቱን', calories: 68, protein: 2.6, carbs: 14, fat: 1.0, fiber: 5.4, servingSize: 100, category: FoodCategory.common, description: 'Fresh guava'),
+    FoodItem(id: 'cm_095', name: 'Date Fruit', nameAmharic: 'ተምር', calories: 277, protein: 1.8, carbs: 75, fat: 0.2, fiber: 6.7, servingSize: 100, category: FoodCategory.common, description: 'Dried dates'),
+    FoodItem(id: 'cm_096', name: 'Popcorn', nameAmharic: 'ፋንዲሻ', calories: 387, protein: 13, carbs: 78, fat: 4.5, fiber: 15, servingSize: 100, category: FoodCategory.common, description: 'Air-popped popcorn'),
   ];
 }
 

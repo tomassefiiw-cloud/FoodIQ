@@ -24,7 +24,8 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _speechAvailable = false;
   bool _isListening = false;
-  String _selectedLocaleId = 'am-ET'; // default to Amharic
+  bool _amharicAvailable = false;
+  String _selectedLocaleId = 'am_ET'; // default to Amharic
   List<stt.LocaleName> _locales = [];
 
   @override
@@ -61,15 +62,19 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
 
       if (_speechAvailable) {
         _locales = await _speech.locales();
-        // Prefer Amharic (am-ET / am) if the device has it; otherwise fall
-        // back to the system locale or English.
+        // Prefer Amharic if the device has a recognizer pack for it. Device
+        // locale IDs vary (am, am_ET, am-ET), so match on the language prefix.
         final amharic = _locales.where((l) =>
-            l.localeId.toLowerCase().startsWith('am'));
+            l.localeId.toLowerCase().replaceAll('-', '_').startsWith('am'));
         if (amharic.isNotEmpty) {
           _selectedLocaleId = amharic.first.localeId;
+          _amharicAvailable = true;
         } else {
+          // No Amharic recognizer installed — fall back to system locale so
+          // English still works, and we'll warn the user when they try Amharic.
           final sys = await _speech.systemLocale();
           _selectedLocaleId = sys?.localeId ?? 'en_US';
+          _amharicAvailable = false;
         }
       }
       if (mounted) setState(() {});
@@ -82,6 +87,11 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
     if (_isListening) {
       await _speech.stop();
       if (mounted) setState(() => _isListening = false);
+      // If we captured something, send it (some Amharic recognizers don't
+      // emit a final result, so the manual stop becomes the "send" trigger).
+      if (_controller.text.trim().isNotEmpty) {
+        _sendMessage();
+      }
       return;
     }
 
@@ -100,12 +110,34 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
       }
     }
 
+    // If the user picked/expects Amharic but no Amharic recognizer is on the
+    // device, tell them how to fix it (the language pack must be installed).
+    final wantsAmharic =
+        _selectedLocaleId.toLowerCase().replaceAll('-', '_').startsWith('am');
+    if (wantsAmharic && !_amharicAvailable) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            duration: Duration(seconds: 6),
+            content: Text(
+                'Amharic voice isn\'t installed on this phone. Install it via '
+                'Settings → System → Languages → Voice input / Google voice '
+                'typing → Languages → Amharic (አማርኛ). You can still type in Amharic.'),
+          ),
+        );
+      }
+    }
+
     setState(() => _isListening = true);
     await _speech.listen(
       localeId: _selectedLocaleId,
+      // Longer windows + a pause threshold so a full Amharic sentence is
+      // captured instead of cutting off after the first word.
+      pauseFor: const Duration(seconds: 4),
+      listenFor: const Duration(seconds: 30),
       listenOptions: stt.SpeechListenOptions(
         partialResults: true,
-        cancelOnError: true,
+        cancelOnError: false,
         listenMode: stt.ListenMode.dictation,
       ),
       onResult: (result) {
@@ -322,6 +354,10 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
                       Expanded(
                         child: TextField(
                           controller: _controller,
+                          minLines: 1,
+                          maxLines: 5,
+                          keyboardType: TextInputType.multiline,
+                          textInputAction: TextInputAction.newline,
                           decoration: InputDecoration(
                             hintText: 'Ask about nutrition... / በአማርኛ ይጠይቁ',
                             filled: true,
@@ -329,7 +365,6 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                           ),
-                          onSubmitted: (_) => _sendMessage(),
                         ),
                       ),
                       const SizedBox(width: 8),

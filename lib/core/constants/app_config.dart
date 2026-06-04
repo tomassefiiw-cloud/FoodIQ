@@ -5,13 +5,14 @@ class AppConfig {
   static final String supabaseUrl = ApiKeys.supabaseUrl;
   static final String supabaseAnonKey = ApiKeys.supabaseAnonKey;
 
-  // AI keys
+  // AI keys (all Gemini — Groq fully removed)
   static final String geminiApiKey = ApiKeys.geminiApiKey;
-  static final String groqApiKey = ApiKeys.groqApiKey;
+  // Separate Gemini key dedicated to the BMI meal-suggestion feature.
+  static final String geminiBmiApiKey = ApiKeys.geminiBmiApiKey;
 
   // App Info
   static const String appName = 'FoodIQ';
-  static const String appVersion = '1.9.0';
+  static const String appVersion = '2.0.0';
   static const String appTagline = 'Smart Ethiopian Calorie Tracking with AI';
 
   // Default Goals
@@ -24,7 +25,8 @@ class AppConfig {
   static const String premiumCurrency = 'ETB';
 
   // AI Models
-  static const String groqChatModel = 'llama-3.3-70b-versatile';
+  /// Gemini text model used for BMI meal suggestions (uses geminiBmiApiKey).
+  static const String geminiBmiModel = 'gemini-2.5-flash-lite';
 
   /// Gemini text/chat model for the AI Assistant.
   ///

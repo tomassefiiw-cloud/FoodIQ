@@ -254,40 +254,73 @@ Based on their BMI, suggest 5-6 specific meals they should try. For each meal:
 
 Keep the response concise, friendly, and culturally relevant. Use both English and Amharic names when available.''';
 
-      final response = await http
-          .post(
-            Uri.parse('https://api.groq.com/openai/v1/chat/completions'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ${AppConfig.groqApiKey}',
-            },
-            body: jsonEncode({
-              'model': AppConfig.groqChatModel,
-              'messages': [
-                {'role': 'system', 'content': systemPrompt},
-                {'role': 'user', 'content': 'Suggest the best meals for my BMI category. I want practical, tasty options I can actually eat.'},
-              ],
-              'max_tokens': 1024,
-              'temperature': 0.7,
-            }),
-          )
-          .timeout(const Duration(seconds: 30));
+      // Uses the dedicated Gemini BMI key (Groq fully removed). Tries a
+      // fallback chain on quota/availability errors.
+      String? reply;
+      for (final model in AppConfig.geminiChatFallbacks) {
+        final response = await http
+            .post(
+              Uri.parse(
+                'https://generativelanguage.googleapis.com/v1beta/models/'
+                '$model:generateContent?key=${AppConfig.geminiBmiApiKey}',
+              ),
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({
+                'systemInstruction': {
+                  'parts': [
+                    {'text': systemPrompt}
+                  ]
+                },
+                'contents': [
+                  {
+                    'role': 'user',
+                    'parts': [
+                      {
+                        'text':
+                            'Suggest the best meals for my BMI category. I want practical, tasty options I can actually eat.'
+                      }
+                    ]
+                  }
+                ],
+                'generationConfig': {
+                  'temperature': 0.7,
+                  'maxOutputTokens': 1024,
+                },
+              }),
+            )
+            .timeout(const Duration(seconds: 30));
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final reply = (data['choices']?[0]?['message']?['content'] as String?)
-                ?.trim() ??
-            'Could not generate suggestions. Please try again.';
-        setState(() {
-          _aiSuggestion = reply;
-          _isSuggesting = false;
-        });
-      } else {
-        setState(() {
-          _aiSuggestion = _getOfflineAISuggestion(_bmi!, _bmiCategory);
-          _isSuggesting = false;
-        });
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body) as Map<String, dynamic>;
+          final candidates = data['candidates'] as List?;
+          final parts =
+              (candidates?[0]?['content']?['parts'] as List?) ?? const [];
+          final text = parts
+              .map((p) => (p is Map && p['text'] != null) ? p['text'] : '')
+              .join('')
+              .toString()
+              .trim();
+          if (text.isNotEmpty) {
+            reply = text;
+            break;
+          }
+        } else {
+          // Try the next model on quota/availability errors; otherwise stop.
+          final body = response.body.toLowerCase();
+          final retry = response.statusCode == 429 ||
+              response.statusCode == 404 ||
+              response.statusCode == 503 ||
+              body.contains('quota') ||
+              body.contains('rate') ||
+              body.contains('unavailable');
+          if (!retry) break;
+        }
       }
+
+      setState(() {
+        _aiSuggestion = reply ?? _getOfflineAISuggestion(_bmi!, _bmiCategory);
+        _isSuggesting = false;
+      });
     } catch (e) {
       setState(() {
         _aiSuggestion = _getOfflineAISuggestion(_bmi!, _bmiCategory);

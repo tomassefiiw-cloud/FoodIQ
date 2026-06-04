@@ -83,7 +83,11 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
   /// The dialog is NOT dismissible by tapping outside — the user MUST
   /// choose a meal type or explicitly press "Cancel" (which skips logging).
   Future<void> _showMealTypeDialog(AIFoodResult result) async {
-    final MealType? selected = await showModalBottomSheet<MealType>(
+    // The base serving the AI estimated (grams). Portion presets scale from it.
+    final double baseGrams = result.servingSize > 0 ? result.servingSize : 100;
+
+    final ({MealType meal, double portion})? selected =
+        await showModalBottomSheet<({MealType meal, double portion})>(
       context: context,
       backgroundColor: Colors.transparent,
       isDismissible: false, // User must explicitly choose
@@ -91,177 +95,265 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
       isScrollControlled: true,
       builder: (ctx) {
         final isDark = Theme.of(ctx).brightness == Brightness.dark;
-        return Container(
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Drag handle
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
+        // Portion presets: factor applied to the AI's estimated serving.
+        // Medium == the AI's estimate (1.0x).
+        const portions = <_PortionPreset>[
+          _PortionPreset(label: 'Small', emoji: '🤏', factor: 0.5),
+          _PortionPreset(label: 'Medium', emoji: '🍽️', factor: 1.0),
+          _PortionPreset(label: 'Large', emoji: '🍲', factor: 1.5),
+          _PortionPreset(label: 'X-Large', emoji: '🥘', factor: 2.0),
+        ];
+        int portionIndex = 1; // default Medium
+
+        return StatefulBuilder(
+          builder: (ctx, setSheet) {
+            final factor = portions[portionIndex].factor;
+            final grams = baseGrams * factor;
+            final cals = result.calories * factor;
+            final prot = result.protein * factor;
+            final carb = result.carbs * factor;
+            final fat = result.fat * factor;
+
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
               ),
-              // Icon header
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Icon(Icons.restaurant_menu, color: AppColors.primary, size: 32),
-              ),
-              const SizedBox(height: 16),
-              // Prominent "AI recognized" banner so the user can clearly see
-              // WHICH meal the AI detected (and confirm it's right) before
-              // choosing breakfast / lunch / dinner / snack.
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.10),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.primary.withOpacity(0.35)),
-                ),
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+              child: SingleChildScrollView(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.auto_awesome, color: AppColors.primary, size: 16),
-                        const SizedBox(width: 6),
-                        Text(
-                          'AI recognized this as',
-                          style: TextStyle(fontFamily: 'Poppins',
-                            fontSize: 12,
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
+                    // Drag handle
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    // AI recognized banner
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.10),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                            color: AppColors.primary.withOpacity(0.35)),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.auto_awesome,
+                                  color: AppColors.primary, size: 16),
+                              const SizedBox(width: 6),
+                              Text('AI recognized this as',
+                                  style: TextStyle(fontFamily: 'Poppins',
+                                      fontSize: 12,
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w600)),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      result.foodName,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontFamily: 'Poppins',
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                          const SizedBox(height: 6),
+                          Text(result.foodName,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontFamily: 'Poppins',
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary)),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${(result.confidence * 100).toStringAsFixed(0)}% match'
+                            '${result.isEthiopian ? ' • Ethiopian 🇪🇹' : ''}',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontFamily: 'Poppins',
+                                fontSize: 13,
+                                color: Colors.grey,
+                                fontWeight: FontWeight.w500),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${(result.confidence * 100).toStringAsFixed(0)}% match • ${result.calories.toStringAsFixed(0)} kcal'
-                      '${result.isEthiopian ? ' • Ethiopian 🇪🇹' : ''}',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontFamily: 'Poppins',
-                        fontSize: 13,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w500,
+                    const SizedBox(height: 16),
+
+                    // ===== PORTION SIZE SELECTOR =====
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('Portion size',
+                          style: TextStyle(fontFamily: 'Poppins',
+                              fontSize: 15, fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: List.generate(portions.length, (i) {
+                        final p = portions[i];
+                        final sel = i == portionIndex;
+                        return Expanded(
+                          child: GestureDetector(
+                            onTap: () => setSheet(() => portionIndex = i),
+                            child: Container(
+                              margin: EdgeInsets.only(
+                                  right: i == portions.length - 1 ? 0 : 8),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                color: sel
+                                    ? AppColors.primary
+                                    : AppColors.primary.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                    color: sel
+                                        ? AppColors.primary
+                                        : AppColors.primary.withOpacity(0.2)),
+                              ),
+                              child: Column(
+                                children: [
+                                  Text(p.emoji,
+                                      style: const TextStyle(fontSize: 20)),
+                                  const SizedBox(height: 2),
+                                  Text(p.label,
+                                      style: TextStyle(fontFamily: 'Poppins',
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: sel
+                                              ? Colors.white
+                                              : AppColors.primary)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Live nutrition for the selected portion
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? const Color(0xFF26263A)
+                            : AppColors.primary.withOpacity(0.06),
+                        borderRadius: BorderRadius.circular(14),
                       ),
+                      child: Column(
+                        children: [
+                          Text('${grams.toStringAsFixed(0)} g  •  '
+                              '${cals.toStringAsFixed(0)} kcal',
+                              style: TextStyle(fontFamily: 'Poppins',
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary)),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              _MacroMini(label: 'Protein', value: prot, color: AppColors.proteinBlue),
+                              _MacroMini(label: 'Carbs', value: carb, color: AppColors.carbsOrange),
+                              _MacroMini(label: 'Fat', value: fat, color: AppColors.fatRed),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('Which meal is this?',
+                          style: TextStyle(fontFamily: 'Poppins',
+                              fontSize: 15, fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(height: 10),
+                    _MealTypeOption(
+                      icon: '🌅',
+                      label: 'Breakfast',
+                      subtitle: '${result.foodName} • ${cals.toStringAsFixed(0)} kcal',
+                      color: const Color(0xFFFF9800),
+                      onTap: () => Navigator.of(ctx)
+                          .pop((meal: MealType.breakfast, portion: factor)),
+                    ),
+                    const SizedBox(height: 10),
+                    _MealTypeOption(
+                      icon: '☀️',
+                      label: 'Lunch',
+                      subtitle: '${result.foodName} • ${cals.toStringAsFixed(0)} kcal',
+                      color: const Color(0xFF4CAF50),
+                      onTap: () => Navigator.of(ctx)
+                          .pop((meal: MealType.lunch, portion: factor)),
+                    ),
+                    const SizedBox(height: 10),
+                    _MealTypeOption(
+                      icon: '🌙',
+                      label: 'Dinner',
+                      subtitle: '${result.foodName} • ${cals.toStringAsFixed(0)} kcal',
+                      color: const Color(0xFF3F51B5),
+                      onTap: () => Navigator.of(ctx)
+                          .pop((meal: MealType.dinner, portion: factor)),
+                    ),
+                    const SizedBox(height: 10),
+                    _MealTypeOption(
+                      icon: '🍿',
+                      label: 'Snack',
+                      subtitle: '${result.foodName} • ${cals.toStringAsFixed(0)} kcal',
+                      color: const Color(0xFFE91E63),
+                      onTap: () => Navigator.of(ctx)
+                          .pop((meal: MealType.snack, portion: factor)),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(null),
+                      child: Text('Skip logging',
+                          style: TextStyle(fontFamily: 'Poppins',
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w500)),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 10),
-              Text(
-                'Not right? Tap "Skip logging" below and retake the photo.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontFamily: 'Poppins',
-                  fontSize: 11,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                'Which meal is this?',
-                style: TextStyle(fontFamily: 'Poppins', 
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 14),
-              // Meal type options
-              _MealTypeOption(
-                icon: '🌅',
-                label: 'Breakfast: ${result.foodName}',
-                subtitle: 'Start your morning with this!',
-                color: const Color(0xFFFF9800),
-                onTap: () => Navigator.of(ctx).pop(MealType.breakfast),
-              ),
-              const SizedBox(height: 10),
-              _MealTypeOption(
-                icon: '☀️',
-                label: 'Lunch: ${result.foodName}',
-                subtitle: 'Fuel your midday energy!',
-                color: const Color(0xFF4CAF50),
-                onTap: () => Navigator.of(ctx).pop(MealType.lunch),
-              ),
-              const SizedBox(height: 10),
-              _MealTypeOption(
-                icon: '🌙',
-                label: 'Dinner: ${result.foodName}',
-                subtitle: 'End your day on a tasty note!',
-                color: const Color(0xFF3F51B5),
-                onTap: () => Navigator.of(ctx).pop(MealType.dinner),
-              ),
-              const SizedBox(height: 10),
-              _MealTypeOption(
-                icon: '🍿',
-                label: 'Snack: ${result.foodName}',
-                subtitle: 'A little treat for later!',
-                color: const Color(0xFFE91E63),
-                onTap: () => Navigator.of(ctx).pop(MealType.snack),
-              ),
-              const SizedBox(height: 16),
-              // Cancel button
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(null),
-                child: Text(
-                  'Skip logging',
-                  style: TextStyle(fontFamily: 'Poppins', 
-                    color: Colors.grey,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
 
     if (selected != null) {
-      await _logFood(result, mealType: selected);
+      await _logFood(result, mealType: selected.meal, portion: selected.portion);
     }
   }
 
-  Future<void> _logFood(AIFoodResult result, {required MealType mealType}) async {
+  Future<void> _logFood(AIFoodResult result,
+      {required MealType mealType, double portion = 1.0}) async {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
+
+    // Scale calories & macros by the chosen portion size.
+    final cals = result.calories * portion;
+    final prot = result.protein * portion;
+    final carb = result.carbs * portion;
+    final fat = result.fat * portion;
+    final grams = (result.servingSize > 0 ? result.servingSize : 100) * portion;
 
     final success = await LogService.addCalorieLog(
       userId: user.id,
       foodId: 'ai_${DateTime.now().millisecondsSinceEpoch}',
       foodName: result.foodName,
       mealType: mealType,
-      portion: 1.0,
-      calories: result.calories,
-      protein: result.protein,
-      carbs: result.carbs,
-      fat: result.fat,
+      portion: 1.0, // already scaled into the values below
+      calories: cals,
+      protein: prot,
+      carbs: carb,
+      fat: fat,
       fiber: 0,
-      servingSize: result.servingSize,
+      servingSize: grams,
     );
 
     if (success && mounted) {
@@ -274,7 +366,8 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
       final mealLabel = _mealTypeLabel(mealType);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('✅ ${result.foodName} logged as $mealLabel! ${result.calories.toStringAsFixed(0)} kcal'),
+          content: Text('✅ ${result.foodName} logged as $mealLabel! '
+              '${grams.toStringAsFixed(0)}g • ${cals.toStringAsFixed(0)} kcal'),
           backgroundColor: AppColors.success,
         ),
       );
@@ -556,6 +649,39 @@ class _NutrientChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
       child: Text(label, style: TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+    );
+  }
+}
+
+/// A portion-size preset (e.g. Small/Medium/Large) used in the scan dialog.
+class _PortionPreset {
+  final String label;
+  final String emoji;
+  final double factor;
+  const _PortionPreset({
+    required this.label,
+    required this.emoji,
+    required this.factor,
+  });
+}
+
+/// Small macro readout used inside the portion nutrition card.
+class _MacroMini extends StatelessWidget {
+  final String label;
+  final double value;
+  final Color color;
+  const _MacroMini({required this.label, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text('${value.toStringAsFixed(1)}g',
+            style: TextStyle(fontFamily: 'Poppins',
+                fontSize: 14, fontWeight: FontWeight.w700, color: color)),
+        Text(label,
+            style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Colors.grey)),
+      ],
     );
   }
 }
