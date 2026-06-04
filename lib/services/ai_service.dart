@@ -7,6 +7,7 @@ import '../core/constants/app_config.dart';
 import '../core/constants/food_database.dart';
 import '../models/ai_models.dart';
 import '../models/food_item.dart';
+import 'gemini_balancer.dart';
 
 /// Result wrapper for chat replies so the UI can show online/offline state.
 class ChatResult {
@@ -76,100 +77,24 @@ Guidelines:
 $languageRule
 - Use both English and Amharic food names when helpful.''';
 
-    String? lastError;
+    // Route through the multi-key load balancer so requests spread across all
+    // available Gemini keys + light models (the key/model with the lowest load
+    // is preferred), maximizing reliability on the free tier.
+    final reply = await GeminiBalancer.instance.generateText(
+      prompt: userMessage,
+      systemPrompt: systemPrompt,
+      temperature: 0.7,
+      maxOutputTokens: 1024,
+    );
 
-    for (final model in AppConfig.geminiChatFallbacks) {
-      try {
-        final url = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/'
-          '$model:generateContent?key=${AppConfig.geminiApiKey}',
-        );
-
-        final response = await http
-            .post(
-              url,
-              headers: {'Content-Type': 'application/json'},
-              body: jsonEncode({
-                'systemInstruction': {
-                  'parts': [
-                    {'text': systemPrompt}
-                  ]
-                },
-                'contents': [
-                  {
-                    'role': 'user',
-                    'parts': [
-                      {'text': userMessage}
-                    ]
-                  }
-                ],
-                'generationConfig': {
-                  'temperature': 0.7,
-                  'maxOutputTokens': 1024,
-                },
-              }),
-            )
-            .timeout(const Duration(seconds: 30));
-
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body) as Map<String, dynamic>;
-          final candidates = data['candidates'] as List?;
-          if (candidates == null || candidates.isEmpty) {
-            lastError = 'No candidates returned';
-            continue;
-          }
-          final parts =
-              (candidates[0]?['content']?['parts'] as List?) ?? const [];
-          final reply = parts
-              .map((p) => (p is Map && p['text'] != null) ? p['text'] : '')
-              .join('')
-              .toString()
-              .trim();
-
-          if (reply.isEmpty) {
-            final finish = candidates[0]?['finishReason']?.toString() ?? '';
-            lastError = 'Empty reply${finish.isNotEmpty ? ' ($finish)' : ''}';
-            continue;
-          }
-          return ChatResult(reply: reply, wasOffline: false);
-        }
-
-        // Non-200 — decide whether to try the next model.
-        // ignore: avoid_print
-        print('[Gemini/$model] HTTP ${response.statusCode}: ${response.body}');
-        final body = response.body.toLowerCase();
-        final isQuota = response.statusCode == 429 ||
-            response.statusCode == 503 ||
-            response.statusCode == 404 ||
-            body.contains('quota') ||
-            body.contains('rate') ||
-            body.contains('unavailable') ||
-            body.contains('not found');
-        lastError = 'HTTP ${response.statusCode}';
-        if (isQuota) {
-          // Try next model in the fallback chain.
-          continue;
-        }
-        // Hard error — stop and use offline fallback.
-        break;
-      } on SocketException catch (e) {
-        return ChatResult(
-          reply: _getOfflineResponse(userMessage),
-          wasOffline: true,
-          error: 'No internet: ${e.message}',
-        );
-      } catch (e) {
-        // ignore: avoid_print
-        print('[Gemini/$model] exception: $e');
-        lastError = e.toString();
-        continue;
-      }
+    if (reply != null && reply.trim().isNotEmpty) {
+      return ChatResult(reply: reply.trim(), wasOffline: false);
     }
 
     return ChatResult(
       reply: _getOfflineResponse(userMessage),
       wasOffline: true,
-      error: lastError ?? 'AI unavailable',
+      error: 'AI unavailable',
     );
   }
 

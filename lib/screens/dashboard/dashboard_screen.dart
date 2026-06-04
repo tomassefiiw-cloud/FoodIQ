@@ -14,6 +14,7 @@ import '../camera/camera_screen.dart';
 import '../profile/profile_screen.dart';
 import '../assistant/assistant_screen.dart';
 import '../bmi/bmi_screen.dart';
+import '../nutrition/nutrition_plan_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -331,6 +332,10 @@ class _HomeTab extends ConsumerWidget {
 
               // AI Tip
               _AITipCard(tip: _getContextualTip(calorieProgress)),
+              const SizedBox(height: 16),
+
+              // AI Nutritionist Quick Access — personalized goals
+              _NutritionistQuickCard(),
               const SizedBox(height: 16),
 
               // BMI Quick Access
@@ -773,6 +778,69 @@ class _MealGroup extends StatelessWidget {
 }
 
 // BMI Quick Access Card
+/// Prominent entry point to the AI Nutritionist (personalized goals).
+class _NutritionistQuickCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => Navigator.push(context,
+          MaterialPageRoute(builder: (_) => const NutritionPlanScreen())),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [
+            AppColors.success.withOpacity(0.95),
+            AppColors.success.withOpacity(0.75),
+          ]),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+                color: AppColors.success.withOpacity(0.25),
+                blurRadius: 14,
+                offset: const Offset(0, 6))
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.22),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.health_and_safety, color: Colors.white),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('AI Nutritionist',
+                      style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                          color: Colors.white)),
+                  const SizedBox(height: 2),
+                  Text(
+                      'Get a personalized calorie & water goal from your health info',
+                      style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 12,
+                          color: Colors.white.withOpacity(0.92))),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _BMIQuickCard extends StatelessWidget {
   final dynamic user;
   const _BMIQuickCard({required this.user});

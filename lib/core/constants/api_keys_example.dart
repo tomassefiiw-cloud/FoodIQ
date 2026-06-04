@@ -7,4 +7,5 @@ class ApiKeys {
   static const String supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
   static const String geminiApiKey = 'YOUR_GEMINI_API_KEY';
   static const String geminiBmiApiKey = 'YOUR_GEMINI_BMI_API_KEY';
+  static const String geminiLegacyApiKey = 'YOUR_GEMINI_LEGACY_API_KEY';
 }

@@ -1,16 +1,14 @@
-import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_config.dart';
 import '../../core/constants/food_database.dart';
 import '../../models/food_item.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/gemini_balancer.dart';
 import '../../services/log_service.dart';
 import '../../services/notification_service.dart';
 
@@ -254,68 +252,15 @@ Based on their BMI, suggest 5-6 specific meals they should try. For each meal:
 
 Keep the response concise, friendly, and culturally relevant. Use both English and Amharic names when available.''';
 
-      // Uses the dedicated Gemini BMI key (Groq fully removed). Tries a
-      // fallback chain on quota/availability errors.
-      String? reply;
-      for (final model in AppConfig.geminiChatFallbacks) {
-        final response = await http
-            .post(
-              Uri.parse(
-                'https://generativelanguage.googleapis.com/v1beta/models/'
-                '$model:generateContent?key=${AppConfig.geminiBmiApiKey}',
-              ),
-              headers: {'Content-Type': 'application/json'},
-              body: jsonEncode({
-                'systemInstruction': {
-                  'parts': [
-                    {'text': systemPrompt}
-                  ]
-                },
-                'contents': [
-                  {
-                    'role': 'user',
-                    'parts': [
-                      {
-                        'text':
-                            'Suggest the best meals for my BMI category. I want practical, tasty options I can actually eat.'
-                      }
-                    ]
-                  }
-                ],
-                'generationConfig': {
-                  'temperature': 0.7,
-                  'maxOutputTokens': 1024,
-                },
-              }),
-            )
-            .timeout(const Duration(seconds: 30));
-
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body) as Map<String, dynamic>;
-          final candidates = data['candidates'] as List?;
-          final parts =
-              (candidates?[0]?['content']?['parts'] as List?) ?? const [];
-          final text = parts
-              .map((p) => (p is Map && p['text'] != null) ? p['text'] : '')
-              .join('')
-              .toString()
-              .trim();
-          if (text.isNotEmpty) {
-            reply = text;
-            break;
-          }
-        } else {
-          // Try the next model on quota/availability errors; otherwise stop.
-          final body = response.body.toLowerCase();
-          final retry = response.statusCode == 429 ||
-              response.statusCode == 404 ||
-              response.statusCode == 503 ||
-              body.contains('quota') ||
-              body.contains('rate') ||
-              body.contains('unavailable');
-          if (!retry) break;
-        }
-      }
+      // Route through the multi-key Gemini load balancer (spreads load across
+      // all keys + light models, preferring the least-busy one).
+      final reply = await GeminiBalancer.instance.generateText(
+        prompt:
+            'Suggest the best meals for my BMI category. I want practical, tasty options I can actually eat.',
+        systemPrompt: systemPrompt,
+        temperature: 0.7,
+        maxOutputTokens: 1024,
+      );
 
       setState(() {
         _aiSuggestion = reply ?? _getOfflineAISuggestion(_bmi!, _bmiCategory);
