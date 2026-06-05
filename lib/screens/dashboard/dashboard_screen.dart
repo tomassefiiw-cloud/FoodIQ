@@ -15,6 +15,8 @@ import '../profile/profile_screen.dart';
 import '../assistant/assistant_screen.dart';
 import '../bmi/bmi_screen.dart';
 import '../nutrition/nutrition_plan_screen.dart';
+import '../wellness/wellness_screen.dart';
+import '../../providers/wellness_provider.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -282,14 +284,21 @@ class _HomeTab extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
 
-              // Macros Row
+              // Macros Row — shows progress vs goal-derived targets
               calorieSummary.when(
-                data: (summary) => _MacrosRow(
-                  protein: summary.totalProtein,
-                  carbs: summary.totalCarbs,
-                  fat: summary.totalFat,
-                  fiber: summary.totalFiber,
-                ),
+                data: (summary) {
+                  final targets = ref.watch(nutritionTargetsProvider).asData?.value;
+                  return _MacrosRow(
+                    protein: summary.totalProtein,
+                    carbs: summary.totalCarbs,
+                    fat: summary.totalFat,
+                    fiber: summary.totalFiber,
+                    proteinTarget: targets?.proteinG ?? 0,
+                    carbsTarget: targets?.carbsG ?? 0,
+                    fatTarget: targets?.fatG ?? 0,
+                    fiberTarget: targets?.fiberG ?? 0,
+                  );
+                },
                 loading: () => const SizedBox(),
                 error: (_, __) => const SizedBox(),
               ),
@@ -336,6 +345,10 @@ class _HomeTab extends ConsumerWidget {
 
               // AI Nutritionist Quick Access — personalized goals
               _NutritionistQuickCard(),
+              const SizedBox(height: 16),
+
+              // Wellness Quick Access — mood/stress check-in + wellness score
+              _WellnessQuickCard(),
               const SizedBox(height: 16),
 
               // BMI Quick Access
@@ -476,19 +489,29 @@ class _MiniMacro extends StatelessWidget {
 // Macros Row
 class _MacrosRow extends StatelessWidget {
   final double protein, carbs, fat, fiber;
-  const _MacrosRow({this.protein = 0, this.carbs = 0, this.fat = 0, this.fiber = 0});
+  final double proteinTarget, carbsTarget, fatTarget, fiberTarget;
+  const _MacrosRow({
+    this.protein = 0,
+    this.carbs = 0,
+    this.fat = 0,
+    this.fiber = 0,
+    this.proteinTarget = 0,
+    this.carbsTarget = 0,
+    this.fatTarget = 0,
+    this.fiberTarget = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: _MacroCard(label: 'Protein', value: protein, unit: 'g', color: AppColors.proteinBlue, icon: Icons.fitness_center)),
+        Expanded(child: _MacroCard(label: 'Protein', value: protein, target: proteinTarget, unit: 'g', color: AppColors.proteinBlue, icon: Icons.fitness_center)),
         const SizedBox(width: 8),
-        Expanded(child: _MacroCard(label: 'Carbs', value: carbs, unit: 'g', color: AppColors.carbsOrange, icon: Icons.grain)),
+        Expanded(child: _MacroCard(label: 'Carbs', value: carbs, target: carbsTarget, unit: 'g', color: AppColors.carbsOrange, icon: Icons.grain)),
         const SizedBox(width: 8),
-        Expanded(child: _MacroCard(label: 'Fat', value: fat, unit: 'g', color: AppColors.fatRed, icon: Icons.water_drop)),
+        Expanded(child: _MacroCard(label: 'Fat', value: fat, target: fatTarget, unit: 'g', color: AppColors.fatRed, icon: Icons.water_drop)),
         const SizedBox(width: 8),
-        Expanded(child: _MacroCard(label: 'Fiber', value: fiber, unit: 'g', color: AppColors.fiberGreen, icon: Icons.eco)),
+        Expanded(child: _MacroCard(label: 'Fiber', value: fiber, target: fiberTarget, unit: 'g', color: AppColors.fiberGreen, icon: Icons.eco)),
       ],
     );
   }
@@ -497,13 +520,16 @@ class _MacrosRow extends StatelessWidget {
 class _MacroCard extends StatelessWidget {
   final String label, unit;
   final double value;
+  final double target;
   final Color color;
   final IconData icon;
-  const _MacroCard({required this.label, required this.value, required this.unit, required this.color, required this.icon});
+  const _MacroCard({required this.label, required this.value, required this.unit, required this.color, required this.icon, this.target = 0});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hasTarget = target > 0;
+    final progress = hasTarget ? (value / target).clamp(0.0, 1.0) : 0.0;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
@@ -514,9 +540,79 @@ class _MacroCard extends StatelessWidget {
         children: [
           Icon(icon, size: 20, color: color),
           const SizedBox(height: 4),
-          Text('${value.toStringAsFixed(1)}', style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(value.toStringAsFixed(0), style: TextStyle(fontFamily: 'Poppins', fontSize: 16, fontWeight: FontWeight.bold)),
+          // Show the goal-derived target so macros track the calorie goal.
+          Text(hasTarget ? '/ ${target.toStringAsFixed(0)}$unit' : '$unit',
+              style: TextStyle(fontFamily: 'Poppins', fontSize: 9, color: Colors.grey)),
           Text(label, style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Colors.grey)),
+          if (hasTarget) ...[
+            const SizedBox(height: 5),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 4,
+                backgroundColor: color.withOpacity(0.15),
+                valueColor: AlwaysStoppedAnimation(color),
+              ),
+            ),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+/// Quick-access card to the Wellness hub (mood/stress + wellness score).
+class _WellnessQuickCard extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final today = ref.watch(todayWellnessProvider).asData?.value;
+    final done = today != null;
+    return InkWell(
+      onTap: () => Navigator.push(context,
+          MaterialPageRoute(builder: (_) => const WellnessScreen())),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkCard : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 15, offset: const Offset(0, 5))],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44, height: 44,
+              decoration: BoxDecoration(
+                color: const Color(0xFF8B5CF6).withOpacity(0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.self_improvement, color: Color(0xFF8B5CF6)),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Wellness Check-in',
+                      style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700, fontSize: 15)),
+                  const SizedBox(height: 2),
+                  Text(
+                      done
+                          ? 'Today logged — view your wellness score'
+                          : 'Track mood & stress, get your wellness score',
+                      style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey)),
+                ],
+              ),
+            ),
+            if (done)
+              const Icon(Icons.check_circle, color: AppColors.success, size: 20)
+            else
+              Icon(Icons.chevron_right_rounded, color: Colors.grey[400]),
+          ],
+        ),
       ),
     );
   }

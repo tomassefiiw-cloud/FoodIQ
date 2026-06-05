@@ -7,6 +7,8 @@ import '../../models/health_profile.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/calorie_provider.dart';
 import '../../providers/water_provider.dart';
+import '../../providers/wellness_provider.dart';
+import '../../services/nutrition_targets.dart';
 import '../../services/nutritionist_service.dart';
 
 /// Personal-nutritionist flow: collect health & financial info, then generate
@@ -161,6 +163,17 @@ class _NutritionPlanScreenState extends ConsumerState<NutritionPlanScreen> {
           user.copyWith(calorieGoal: calories, waterGoal: waterMl),
         );
 
+    // "Everything based on the goal": derive & persist macro targets
+    // (protein/carbs/fat/fiber) from the accepted calorie goal, adjusted for
+    // the user's health conditions. The whole app reads these targets.
+    final conditions = _conditions.where((c) => c != 'None').toList();
+    final targets = NutritionTargets.compute(
+      calorieGoal: calories,
+      waterMl: waterMl,
+      conditions: conditions,
+    );
+    await targets.save();
+
     // Persist BMI prefs so reminders & other features stay in sync.
     final prefs = await SharedPreferences.getInstance();
     final h = double.tryParse(_height.text);
@@ -173,6 +186,7 @@ class _NutritionPlanScreenState extends ConsumerState<NutritionPlanScreen> {
     // Refresh dashboard rings.
     ref.invalidate(todayCalorieSummaryProvider);
     ref.invalidate(todayWaterSummaryProvider);
+    ref.invalidate(nutritionTargetsProvider);
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(

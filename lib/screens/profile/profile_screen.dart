@@ -7,6 +7,7 @@ import '../assistant/assistant_screen.dart';
 import '../settings/settings_screen.dart';
 import '../bmi/bmi_screen.dart';
 import '../nutrition/nutrition_plan_screen.dart';
+import '../wellness/wellness_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -133,6 +134,7 @@ class ProfileScreen extends ConsumerWidget {
             // Menu items
             _ProfileMenuItem(icon: Icons.person_outline, title: 'Edit Profile', subtitle: 'Update your personal information', onTap: () {}),
             _ProfileMenuItem(icon: Icons.health_and_safety, title: 'AI Nutritionist', subtitle: 'Personalized calorie & water goals from your health info', color: AppColors.success, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NutritionPlanScreen()))),
+            _ProfileMenuItem(icon: Icons.self_improvement, title: 'Wellness', subtitle: 'Daily mood & stress check-in + wellness score', color: const Color(0xFF8B5CF6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WellnessScreen()))),
             _ProfileMenuItem(icon: Icons.monitor_weight, title: 'BMI Calculator', subtitle: 'Calculate BMI & get AI meal suggestions', color: AppColors.primary, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BMIScreen()))),
             _ProfileMenuItem(icon: Icons.smart_toy, title: 'AI Assistant', subtitle: 'Chat with our nutrition AI', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AssistantScreen()))),
             _ProfileMenuItem(icon: Icons.restaurant_menu, title: 'Custom Foods', subtitle: 'Manage your custom food items', onTap: () {}),

@@ -30,10 +30,10 @@ jobs:
         run: flutter build apk --release --no-tree-shake-icons
 
       - name: Rename APK
-        run: cp build/app/outputs/flutter-apk/app-release.apk FoodIQ-v2.1.0.apk
+        run: cp build/app/outputs/flutter-apk/app-release.apk FoodIQ-v2.2.0.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: FoodIQ-v2.1.0
-          path: FoodIQ-v2.1.0.apk
+          name: FoodIQ-v2.2.0
+          path: FoodIQ-v2.2.0.apk
